@@ -39,7 +39,7 @@
   #include "../../../feature/powerloss.h"
 #endif
 
-#if BOTH(LCD_SET_PROGRESS_MANUALLY, USE_M73_REMAINING_TIME)
+#if ENABLED(SET_REMAINING_TIME)
   #include "../../marlinui.h"
 #endif
 
@@ -48,11 +48,7 @@ static lv_obj_t *scr;
 static lv_obj_t *labelExt1, *labelFan, *labelZpos, *labelTime;
 static lv_obj_t *labelPause, *labelStop, *labelOperat;
 static lv_obj_t *bar1, *bar1ValueText;
-static lv_obj_t *buttonPause, *buttonOperat, *buttonStop
-                #if DISABLED(TFT_MIXWARE_LVGL_UI)
-                , *buttonExt1, *buttonFanstate, *buttonZpos
-                #endif
-                ;
+static lv_obj_t *buttonPause, *buttonOperat, *buttonStop, *buttonExt1, *buttonFanstate, *buttonZpos;
 
 #if HAS_MULTI_EXTRUDER
   static lv_obj_t *labelExt2;
@@ -61,16 +57,7 @@ static lv_obj_t *buttonPause, *buttonOperat, *buttonStop
 
 #if HAS_HEATED_BED
   static lv_obj_t* labelBed;
-  #if DISABLED(TFT_MIXWARE_LVGL_UI)
-    static lv_obj_t* buttonBedstate;
-  #endif
-#endif
-
-#if ENABLED(TFT_MIXWARE_LVGL_UI)
-  static lv_obj_t* labelBabystep;
-  static lv_obj_t* buttonBabystep;
-  static lv_obj_t* labelFMDet;
-  static lv_obj_t* buttonFMDet;
+  static lv_obj_t* buttonBedstate;
 #endif
 
 enum {
@@ -98,26 +85,27 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
           stop_print_time();
           uiCfg.print_state = PAUSING;
         #endif
-        lv_imgbtn_set_src_both(buttonPause, TERN(TFT_MIXWARE_LVGL_UI, MIMG.printResume, "F:/bmp_resume.bin"));
-        lv_label_set_text(labelPause, TERN(TFT_MIXWARE_LVGL_UI, MTR.printResume, printing_menu.resume));
+        lv_imgbtn_set_src_both(buttonPause, "F:/bmp_resume.bin");
+        lv_label_set_text(labelPause, printing_menu.resume);
+        lv_obj_align(labelPause, buttonPause, LV_ALIGN_CENTER, 30, 0);
       }
       else if (uiCfg.print_state == PAUSED) {
         uiCfg.print_state = RESUMING;
-        lv_imgbtn_set_src_both(obj, TERN(TFT_MIXWARE_LVGL_UI, MIMG.printPause, "F:/bmp_pause.bin"));
-        lv_label_set_text(labelPause, TERN(TFT_MIXWARE_LVGL_UI, MTR.printPause, printing_menu.pause));
+        lv_imgbtn_set_src_both(obj, "F:/bmp_pause.bin");
+        lv_label_set_text(labelPause, printing_menu.pause);
+        lv_obj_align(labelPause, buttonPause, LV_ALIGN_CENTER, 30, 0);
       }
       #if ENABLED(POWER_LOSS_RECOVERY)
         else if (uiCfg.print_state == REPRINTING) {
           uiCfg.print_state = REPRINTED;
-          lv_imgbtn_set_src_both(obj, TERN(TFT_MIXWARE_LVGL_UI, MIMG.printPause, "F:/bmp_pause.bin"));
-          lv_label_set_text(labelPause, TERN(TFT_MIXWARE_LVGL_UI, MTR.printPause, printing_menu.pause));
+          lv_imgbtn_set_src_both(obj, "F:/bmp_pause.bin");
+          lv_label_set_text(labelPause, printing_menu.pause);
+          lv_obj_align(labelPause, buttonPause, LV_ALIGN_CENTER, 30, 0);
           print_time.minutes = recovery.info.print_job_elapsed / 60;
           print_time.seconds = recovery.info.print_job_elapsed % 60;
           print_time.hours   = print_time.minutes / 60;
         }
       #endif
-
-      lv_obj_align(labelPause, buttonPause, LV_ALIGN_IN_BOTTOM_MID, 0, -10);
       break;
     case ID_STOP:
       lv_clear_printing();
@@ -133,17 +121,9 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
       lv_draw_preHeat();
       break;
     case ID_TEMP_BED:
-      #if DISABLED(TFT_MIXWARE_LVGL_UI)
-        uiCfg.curTempType = 1;
-        lv_clear_printing();
-        lv_draw_preHeat();
-      #else
-        MUI.toggle_filament_detector();
-        lv_label_set_text(labelFMDet, MUI.get_filament_detector_tr());
-        update_spi_flash();
-
-        detector.reset();
-      #endif
+      uiCfg.curTempType = 1;
+      lv_clear_printing();
+      lv_draw_preHeat();
       break;
     case ID_BABYSTEP:
       lv_clear_printing();
@@ -161,7 +141,6 @@ void lv_draw_printing() {
   ZERO(disp_state_stack._disp_state);
   scr = lv_screen_create(PRINTING_UI);
 
-#if DISABLED(TFT_MIXWARE_LVGL_UI)
   // Create image buttons
   buttonExt1 = lv_imgbtn_create(scr, "F:/bmp_ext1_state.bin", 206, 136, event_handler, ID_TEMP_EXT);
 
@@ -234,65 +213,6 @@ void lv_draw_printing() {
   bar1ValueText = lv_label_create_empty(bar1);
   lv_label_set_text(bar1ValueText, "0%");
   lv_obj_align(bar1ValueText, bar1, LV_ALIGN_CENTER, 0, 0);
-#else
-  lv_imgbtn_create(scr, MIMG.stateTime,        165,  80, nullptr);
-  lv_imgbtn_create(scr, MIMG.stateZ,           165, 125, nullptr);
-  lv_imgbtn_create(scr, MIMG_HM(state_extruct), 165, 170, nullptr);
-  lv_imgbtn_create(scr, MIMG.stateBed,         165, 215, nullptr);
-  lv_imgbtn_create(scr, MIMG.stateFan,         165, 260, nullptr);
-
-  buttonFMDet    = lv_imgbtn_create(scr, MIMG.filamentDetector, 5, 325, event_handler, ID_TEMP_BED);
-  buttonBabystep = lv_imgbtn_create(scr, MIMG.babystep, 161, 325, event_handler, ID_BABYSTEP);
-  buttonPause    = lv_imgbtn_create(scr, uiCfg.print_state == WORKING ? MIMG.printPause : MIMG.printResume, 4, 395, event_handler, ID_PAUSE);
-  buttonStop     = lv_imgbtn_create(scr, MIMG.printStop, 108, 395, event_handler, ID_STOP);
-  buttonOperat   = lv_imgbtn_create(scr, MIMG.operate, 212, 395, event_handler, ID_OPTION);
-
-  labelTime = lv_label_create(scr, 234, 90, nullptr);
-  labelZpos = lv_label_create(scr, 234, 135, nullptr);
-  labelExt1 = lv_label_create(scr, 234, 180, nullptr);
-  labelBed  = lv_label_create(scr, 234, 225, nullptr);
-  labelFan  = lv_label_create(scr, 234, 270, nullptr);
-
-  labelFMDet    = lv_label_create_empty(buttonFMDet);
-  labelBabystep = lv_label_create_empty(buttonBabystep);
-
-  labelPause  = lv_label_create_empty(buttonPause);
-  labelStop   = lv_label_create_empty(buttonStop);
-  labelOperat = lv_label_create_empty(buttonOperat);
-
-  if (!MUI.get_heating_mode()) {
-    lv_obj_t *b_mode = lv_img_create(scr, nullptr);
-    lv_img_set_src(b_mode, MIMG.heating_mode_tips);
-    lv_obj_set_pos(b_mode, 20, 285);
-    lv_obj_t *l_mode = MUI.page_label(b_mode, MTR.eHeatingModeTipsAbb);
-    lv_obj_align(l_mode, b_mode, LV_ALIGN_CENTER, 0, 0);
-  }
-
-  lv_label_set_text(labelFMDet, MUI.get_filament_detector_tr());
-  lv_obj_align(labelFMDet, buttonFMDet, LV_ALIGN_CENTER, 15, 0);
-
-  lv_label_set_text(labelBabystep, MTR.babystep);
-  lv_obj_align(labelBabystep, buttonBabystep, LV_ALIGN_CENTER, 15, 0);
-
-  lv_label_set_text(labelPause, uiCfg.print_state == WORKING ? MTR.printPause : MTR.printResume);
-  lv_obj_align(labelPause, buttonPause, LV_ALIGN_IN_BOTTOM_MID, 0, -10);
-
-  lv_label_set_text(labelStop, MTR.printStop);
-  lv_obj_align(labelStop, buttonStop, LV_ALIGN_IN_BOTTOM_MID, 0, -10);
-
-  lv_label_set_text(labelOperat, MTR.operation);
-  lv_obj_align(labelOperat, buttonOperat, LV_ALIGN_IN_BOTTOM_MID, 0, -10);
-
-  bar1 = lv_bar_create(scr, nullptr);
-  lv_obj_set_pos(bar1, 10, 36);
-  lv_obj_set_size(bar1, 300, 36);
-  lv_bar_set_style(bar1, LV_BAR_STYLE_INDIC, &lv_bar_style_indic);
-  lv_bar_set_anim_time(bar1, 1000);
-  lv_bar_set_value(bar1, 0, LV_ANIM_ON);
-  bar1ValueText = lv_label_create_empty(bar1);
-  lv_label_set_text(bar1ValueText, "0%");
-  lv_obj_align(bar1ValueText, bar1, LV_ALIGN_CENTER, 0, 0);
-#endif
 
   disp_ext_temp();
   disp_bed_temp();
@@ -324,7 +244,7 @@ void disp_fan_speed() {
 }
 
 void disp_print_time() {
-  #if BOTH(LCD_SET_PROGRESS_MANUALLY, USE_M73_REMAINING_TIME)
+  #if ENABLED(SET_REMAINING_TIME)
     const uint32_t r = ui.get_remaining_time();
     sprintf_P(public_buf_l, PSTR("%02d:%02d R"), r / 3600, (r % 3600) / 60);
   #else
@@ -366,15 +286,6 @@ void setProBarRate() {
     rate = (rate_tmp_r - (PREVIEW_SIZE + To_pre_view)) * 100 / (gCfgItems.curFilesize - (PREVIEW_SIZE + To_pre_view));
   }
 
-  #if ENABLED(TFT_MIXWARE_LVGL_UI)
-    static uint8_t last_print_state = IDLE;
-    if (last_print_state != uiCfg.print_state) {
-      last_print_state = uiCfg.print_state;
-      lv_imgbtn_set_src_both(buttonPause, (uiCfg.print_state == WORKING || uiCfg.print_state == REPRINTED) ? MIMG.printPause : MIMG.printResume);
-      lv_label_set_text(labelPause, (uiCfg.print_state == WORKING || uiCfg.print_state == REPRINTED) ? printing_menu.pause : printing_menu.resume);
-    }
-  #endif
-
   if (rate <= 0) return;
 
   if (disp_state == PRINTING_UI) {
@@ -383,28 +294,26 @@ void setProBarRate() {
     lv_label_set_text(bar1ValueText, public_buf_l);
     lv_obj_align(bar1ValueText, bar1, LV_ALIGN_CENTER, 0, 0);
 
-    #if DISABLED(TFT_MIXWARE_LVGL_UI)
-      if (marlin_state == MF_SD_COMPLETE) {
-        if (once_flag == 0) {
-          stop_print_time();
+    if (marlin_state == MF_SD_COMPLETE) {
+      if (once_flag == 0) {
+        stop_print_time();
 
-          flash_preview_begin = false;
-          default_preview_flg = false;
-          lv_clear_printing();
-          lv_draw_dialog(DIALOG_TYPE_FINISH_PRINT);
+        flash_preview_begin = false;
+        default_preview_flg = false;
+        lv_clear_printing();
+        lv_draw_dialog(DIALOG_TYPE_FINISH_PRINT);
 
-          once_flag = true;
+        once_flag = true;
 
-          #if HAS_SUICIDE
-            if (gCfgItems.finish_power_off) {
-              gcode.process_subcommands_now(F("M1001"));
-              queue.inject(F("M81"));
-              marlin_state = MF_RUNNING;
-            }
-          #endif
-        }
+        #if HAS_SUICIDE
+          if (gCfgItems.finish_power_off) {
+            gcode.process_subcommands_now(F("M1001"));
+            queue.inject(F("M81"));
+            marlin_state = MF_RUNNING;
+          }
+        #endif
       }
-    #endif
+    }
   }
 }
 

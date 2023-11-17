@@ -31,8 +31,8 @@
 
 #if NOT_TARGET(__STM32F1__, STM32F1xx)
   #error "Oops! Select an STM32F1 board in 'Tools > Board.'"
-#elif HOTENDS > 1 || E_STEPPERS > 1
-  #error "FLSUN HiSpeedV1 only supports one hotend / E-stepper. Comment out this line to continue."
+#elif HAS_MULTI_HOTEND || E_STEPPERS > 1
+  #error "FLSUN HiSpeedV1 only supports 1 hotend / E stepper."
 #endif
 
 #define BOARD_INFO_NAME      "FLSun HiSpeedV1"
@@ -53,9 +53,9 @@
 //
 #if EITHER(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
   #define FLASH_EEPROM_EMULATION
-  #define EEPROM_PAGE_SIZE     (0x800U)           // 2KB
+  #define EEPROM_PAGE_SIZE     (0x800U)           // 2K
   #define EEPROM_START_ADDRESS (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
-  #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE  // 2KB
+  #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE  // 2K
 #endif
 
 //
@@ -68,15 +68,14 @@
 #define SPI_DEVICE                             2
 
 // SPI Flash
-#define HAS_SPI_FLASH                          1
-#define SPI_FLASH_SIZE                 0x1000000  // 16MB
-
-#if HAS_SPI_FLASH
+#define SPI_FLASH
+#if ENABLED(SPI_FLASH)
   // SPI 2
   #define SPI_FLASH_CS_PIN                  PB12  // SPI2_NSS / Flash chip-select
   #define SPI_FLASH_MOSI_PIN                PB15
   #define SPI_FLASH_MISO_PIN                PB14
   #define SPI_FLASH_SCK_PIN                 PB13
+  #define SPI_FLASH_SIZE               0x1000000  // 16MB
 #endif
 
 //
@@ -93,7 +92,7 @@
 #define Z_MAX_PIN                           PC4   // +Z
 
 #ifndef FIL_RUNOUT_PIN
-  #define FIL_RUNOUT_PIN            MT_DET_1_PIN
+  #define FIL_RUNOUT_PIN                    PA4   // MT_DET
 #endif
 
 //
@@ -139,27 +138,29 @@
     #define DEFAULT_PWM_MOTOR_CURRENT { 800, 800, 800 }
   #endif
 
-  /**
-   * MKS Robin_Wifi or another ESP8266 module
-   *
-   *      __ESP(M1)__       -J1-
-   *  GND| 15 | | 08 |+3v3  (22)  RXD1      (PA10)
-   *     | 16 | | 07 |MOSI  (21)  TXD1      (PA9)   Active LOW, probably OK to leave floating
-   *  IO2| 17 | | 06 |MISO  (19)  IO1       (PC7)   Leave as unused (ESP3D software configures this with a pullup so OK to leave as floating)
-   *  IO0| 18 | | 05 |CLK   (18)  IO0       (PA8)   Must be HIGH (ESP3D software configures this with a pullup so OK to leave as floating)
-   *  IO1| 19 | | 03 |EN    (03)  WIFI_EN           Must be HIGH for module to run
-   *     | nc | | nc |      (01)  WIFI_CTRL (PA5)
-   *   RX| 21 | | nc |
-   *   TX| 22 | | 01 |RST
-   *       ￣￣ AE￣￣
-   */
-  // Module ESP-WIFI
-  #define ESP_WIFI_MODULE_COM                  2  // Must also set either SERIAL_PORT or SERIAL_PORT_2 to this
-  #define ESP_WIFI_MODULE_BAUDRATE      BAUDRATE  // Must use same BAUDRATE as SERIAL_PORT & SERIAL_PORT_2
-  #define ESP_WIFI_MODULE_RESET_PIN         PA5   // WIFI CTRL/RST
-  #define ESP_WIFI_MODULE_ENABLE_PIN        -1
-  #define ESP_WIFI_MODULE_TXD_PIN           PA9   // MKS or ESP WIFI RX PIN
-  #define ESP_WIFI_MODULE_RXD_PIN           PA10  // MKS or ESP WIFI TX PIN
+  #if ENABLED(WIFISUPPORT)
+    /**
+     * MKS Robin_Wifi or another ESP8266 module
+     *
+     *      __ESP(M1)__       -J1-
+     *  GND| 15 | | 08 |+3v3  (22)  RXD1      (PA10)
+     *     | 16 | | 07 |MOSI  (21)  TXD1      (PA9)   Active LOW, probably OK to leave floating
+     *  IO2| 17 | | 06 |MISO  (19)  IO1       (PC7)   Leave as unused (ESP3D software configures this with a pullup so OK to leave as floating)
+     *  IO0| 18 | | 05 |CLK   (18)  IO0       (PA8)   Must be HIGH (ESP3D software configures this with a pullup so OK to leave as floating)
+     *  IO1| 19 | | 03 |EN    (03)  WIFI_EN           Must be HIGH for module to run
+     *     | nc | | nc |      (01)  WIFI_CTRL (PA5)
+     *   RX| 21 | | nc |
+     *   TX| 22 | | 01 |RST
+     *       ￣￣ AE￣￣
+     */
+    // Module ESP-WIFI
+    #define ESP_WIFI_MODULE_COM                2  // Must also set either SERIAL_PORT or SERIAL_PORT_2 to this
+    #define ESP_WIFI_MODULE_BAUDRATE    BAUDRATE  // Must use same BAUDRATE as SERIAL_PORT & SERIAL_PORT_2
+    #define ESP_WIFI_MODULE_RESET_PIN       PA5   // WIFI CTRL/RST
+    #define ESP_WIFI_MODULE_ENABLE_PIN      -1
+    #define ESP_WIFI_MODULE_TXD_PIN         PA9   // MKS or ESP WIFI RX PIN
+    #define ESP_WIFI_MODULE_RXD_PIN         PA10  // MKS or ESP WIFI TX PIN
+  #endif
 #endif
 
 //
@@ -218,14 +219,14 @@
 //
 #if ENABLED(PSU_CONTROL)
   #define KILL_PIN                          PA2   // PW_DET
-  #define KILL_PIN_STATE                   HIGH
+  #define KILL_PIN_STATE                    HIGH
   //#define PS_ON_PIN                       PA3   // PW_CN /PW_OFF
 #endif
 
 #if HAS_TFT_LVGL_UI
   #define MT_DET_1_PIN                      PA4   // MT_DET
   #define MT_DET_2_PIN                      PE6
-  #define MT_DET_PIN_STATE                  LOW
+  #define MT_DET_PIN_STATE                   LOW
 #endif
 
 //

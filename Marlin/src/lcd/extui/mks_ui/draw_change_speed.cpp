@@ -32,8 +32,8 @@
 
 extern lv_group_t *g;
 static lv_obj_t *scr;
-static lv_obj_t *labelStep, *buttonStep, *buttonMov;//, *buttonExt;
-static lv_obj_t *labelMov;//, *labelExt;
+static lv_obj_t *labelStep, *buttonStep, *buttonMov, *buttonExt;
+static lv_obj_t *labelMov, *labelExt;
 static lv_obj_t *printSpeedText;
 
 enum {
@@ -91,15 +91,9 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
       disp_print_speed();
       break;
     case ID_C_MOVE:
-      #if DISABLED(TFT_MIXWARE_LVGL_UI)
-        editingFlowrate = false;
-        disp_speed_type();
-        disp_print_speed();
-      #else
-        editingFlowrate ^= true;
-        disp_speed_type();
-        disp_print_speed();
-      #endif
+      editingFlowrate = false;
+      disp_speed_type();
+      disp_print_speed();
       break;
     case ID_C_EXT:
       editingFlowrate = true;
@@ -116,16 +110,13 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
       disp_speed_step();
       break;
     case ID_C_RETURN:
-      clear_cur_ui();
-      draw_return_ui();
+      goto_previous_ui();
       break;
   }
 }
 
 void lv_draw_change_speed() {
   scr = lv_screen_create(CHANGE_SPEED_UI);
-
-#if DISABLED(TFT_MIXWARE_LVGL_UI)
   // Create an Image button
   lv_big_button_create(scr, "F:/bmp_Add.bin", speed_menu.add, INTERVAL_V, titleHeight, event_handler, ID_C_ADD);
   lv_big_button_create(scr, "F:/bmp_Dec.bin", speed_menu.dec, BTN_X_PIXEL * 3 + INTERVAL_V * 4, titleHeight, event_handler, ID_C_DEC);
@@ -156,24 +147,6 @@ void lv_draw_change_speed() {
 
   disp_speed_type();
   disp_speed_step();
-#else
-  // Create an Image button
-  buttonMov = lv_imgbtn_create(scr,  nullptr, IMAGEBTN_P_X(2), IMAGEBTN_P_Y(2), event_handler, ID_C_MOVE);
-  buttonStep = lv_imgbtn_create(scr, nullptr, IMAGEBTN_P_X(3), IMAGEBTN_P_Y(3), event_handler, ID_C_STEP);
-  lv_big_button_create(scr, MIMG.add, MTR.add, IMAGEBTN_P_X(4), IMAGEBTN_P_Y(4), event_handler, ID_C_ADD);
-  lv_big_button_create(scr, MIMG.dec, MTR.dec, IMAGEBTN_P_X(5), IMAGEBTN_P_Y(5), event_handler, ID_C_DEC);
-  MUI.page_button_return(scr, event_handler, ID_C_RETURN);
-
-  // Create labels on the image buttons
-  labelMov = lv_label_create_empty(buttonMov);
-  labelStep = lv_label_create_empty(buttonStep);
-
-  disp_speed_type();
-  disp_speed_step();
-
-  MUI.page_button_add_tips(buttonMov);
-  MUI.page_button_add_tips(buttonStep);
-#endif
 
   printSpeedText = lv_label_create_empty(scr);
   lv_obj_set_style(printSpeedText, &tft_style_label_rel);
@@ -182,24 +155,24 @@ void lv_draw_change_speed() {
 
 void disp_speed_step() {
   if (uiCfg.stepPrintSpeed == 1)
-    lv_imgbtn_set_src_both(buttonStep, TERN(TFT_MIXWARE_LVGL_UI, MIMG.rate1, "F:/bmp_step1_percent.bin"));
+    lv_imgbtn_set_src_both(buttonStep, "F:/bmp_step1_percent.bin");
   else if (uiCfg.stepPrintSpeed == 5)
-    lv_imgbtn_set_src_both(buttonStep, TERN(TFT_MIXWARE_LVGL_UI, MIMG.rate5, "F:/bmp_step5_percent.bin"));
+    lv_imgbtn_set_src_both(buttonStep, "F:/bmp_step5_percent.bin");
   else if (uiCfg.stepPrintSpeed == 10)
-    lv_imgbtn_set_src_both(buttonStep, TERN(TFT_MIXWARE_LVGL_UI, MIMG.rate10, "F:/bmp_step10_percent.bin"));
+    lv_imgbtn_set_src_both(buttonStep, "F:/bmp_step10_percent.bin");
 
   if (gCfgItems.multiple_language) {
     if (uiCfg.stepPrintSpeed == 1) {
       lv_label_set_text(labelStep, speed_menu.step_1percent);
-      lv_obj_align(labelStep, buttonStep, LV_ALIGN_IN_BOTTOM_MID, 0, TERN(TFT_MIXWARE_LVGL_UI, BUTTON_TEXT_Y_OFFSET-10, BUTTON_TEXT_Y_OFFSET));
+      lv_obj_align(labelStep, buttonStep, LV_ALIGN_IN_BOTTOM_MID, 0, BUTTON_TEXT_Y_OFFSET);
     }
     else if (uiCfg.stepPrintSpeed == 5) {
       lv_label_set_text(labelStep, speed_menu.step_5percent);
-      lv_obj_align(labelStep, buttonStep, LV_ALIGN_IN_BOTTOM_MID, 0, TERN(TFT_MIXWARE_LVGL_UI, BUTTON_TEXT_Y_OFFSET-10, BUTTON_TEXT_Y_OFFSET));
+      lv_obj_align(labelStep, buttonStep, LV_ALIGN_IN_BOTTOM_MID, 0, BUTTON_TEXT_Y_OFFSET);
     }
     else if (uiCfg.stepPrintSpeed == 10) {
       lv_label_set_text(labelStep, speed_menu.step_10percent);
-      lv_obj_align(labelStep, buttonStep, LV_ALIGN_IN_BOTTOM_MID, 0, TERN(TFT_MIXWARE_LVGL_UI, BUTTON_TEXT_Y_OFFSET-10, BUTTON_TEXT_Y_OFFSET));
+      lv_obj_align(labelStep, buttonStep, LV_ALIGN_IN_BOTTOM_MID, 0, BUTTON_TEXT_Y_OFFSET);
     }
   }
 }
@@ -224,16 +197,10 @@ void disp_print_speed() {
   sprintf_P(buf, PSTR("%d%%"), val);
   strcat(public_buf_l, buf);
   lv_label_set_text(printSpeedText, public_buf_l);
-
-  #if DISABLED(TFT_MIXWARE_LVGL_UI)
-    lv_obj_align(printSpeedText, nullptr, LV_ALIGN_CENTER, 0, -65);
-  #else
-    lv_obj_align(printSpeedText, NULL, LV_ALIGN_IN_TOP_MID, 0, 85);
-  #endif
+  lv_obj_align(printSpeedText, nullptr, LV_ALIGN_CENTER, 0, -65);
 }
 
 void disp_speed_type() {
-#if DISABLED(TFT_MIXWARE_LVGL_UI)
   lv_imgbtn_set_src_both(buttonMov, editingFlowrate ? "F:/bmp_mov_changeSpeed.bin" : "F:/bmp_mov_sel.bin");
   lv_imgbtn_set_src_both(buttonExt, editingFlowrate ? "F:/bmp_extruct_sel.bin" : "F:/bmp_speed_extruct.bin");
   lv_obj_refresh_ext_draw_pad(buttonExt);
@@ -246,13 +213,6 @@ void disp_speed_type() {
     lv_label_set_text(labelExt, speed_menu.extrude);
     lv_obj_align(labelExt, buttonExt, LV_ALIGN_IN_BOTTOM_MID, 0, BUTTON_TEXT_Y_OFFSET);
   }
-#else
-  lv_imgbtn_set_src_both(buttonMov, editingFlowrate ? MIMG_HM(extruct) : MIMG.move);
-  lv_obj_refresh_ext_draw_pad(buttonMov);
-
-  lv_label_set_text(labelMov, editingFlowrate ? speed_menu.extrude : speed_menu.move);
-  lv_obj_align(labelMov, buttonMov, LV_ALIGN_IN_BOTTOM_MID, 0, BUTTON_TEXT_Y_OFFSET-10);
-#endif
 }
 
 void lv_clear_change_speed() {

@@ -57,8 +57,8 @@ void GcodeSuite::M218() {
 }
 
 void GcodeSuite::M218_report(const bool forReplay/*=true*/) {
-  report_heading_etc(forReplay, PSTR(STR_HOTEND_OFFSETS));
-  LOOP_S_L_N(e, 0, HOTENDS) {
+  report_heading_etc(forReplay, F(STR_HOTEND_OFFSETS));
+  LOOP_S_L_N(e, 1, HOTENDS) {
     report_echo_start(forReplay);
     SERIAL_ECHOPGM_P(
       PSTR("  M218 T"), e,

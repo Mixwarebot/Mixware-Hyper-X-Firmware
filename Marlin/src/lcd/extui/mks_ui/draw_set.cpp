@@ -38,16 +38,7 @@
   #include "../../../MarlinCore.h"
 #endif
 
-#ifndef USE_NEW_LVGL_CONF
-  static lv_obj_t *scr;
-#endif
-
-#if ENABLED(TFT_MIXWARE_LVGL_UI)
-#include "../../../module/motion.h"
-#include "../../../module/probe.h"
-
-static lv_obj_t *buttonFilamentDet, *labelFilamentDet;
-#endif
+static lv_obj_t *scr;
 extern lv_group_t*  g;
 
 enum {
@@ -60,29 +51,15 @@ enum {
   ID_S_MACHINE_PARA,
   ID_S_EEPROM_SET,
   ID_S_RETURN
-#if ENABLED(TFT_MIXWARE_LVGL_UI)
-  ,ID_S_FILAMENT_DET
-  ,ID_S_DEBUG
-#endif
 };
 
 static void event_handler(lv_obj_t *obj, lv_event_t event) {
   if (event != LV_EVENT_RELEASED) return;
   if (obj->mks_obj_id == ID_S_CONTINUE) return;
   if (obj->mks_obj_id == ID_S_MOTOR_OFF) {
-    TERN(HAS_SUICIDE, suicide(), queue.enqueue_now_P(PSTR("M84")));
+    TERN(HAS_SUICIDE, suicide(), queue.enqueue_now(F("M84")));
     return;
   }
-  #if ENABLED(TFT_MIXWARE_LVGL_UI)
-    if (obj->mks_obj_id == ID_S_FILAMENT_DET) {
-      MUI.toggle_filament_detector();
-      lv_imgbtn_set_src_both(buttonFilamentDet, MUI.get_filament_detector_image_path());
-      lv_label_set_text(labelFilamentDet, MUI.get_filament_detector_tr());
-      lv_obj_refresh_ext_draw_pad(labelFilamentDet);
-      update_spi_flash();
-      return;
-    }
-  #endif
   lv_clear_set();
   switch (obj->mks_obj_id) {
     case ID_S_FAN:
@@ -95,11 +72,7 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
       lv_draw_language();
       break;
     case ID_S_MACHINE_PARA:
-      #if DISABLED(TFT_MIXWARE_LVGL_UI)
-        lv_draw_machine_para();
-      #else
-        lv_draw_advance_settings();
-      #endif
+      lv_draw_machine_para();
       break;
     case ID_S_EEPROM_SET:
       lv_draw_eeprom_settings();
@@ -134,47 +107,30 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
         }
         break;
     #endif
-    #if ENABLED(TFT_MIXWARE_LVGL_UI)
-      case ID_S_DEBUG:
-        MUI.page_draw_device_debug();
-        break;
-    #endif
   }
 }
 
 void lv_draw_set() {
-#ifdef USE_NEW_LVGL_CONF
-  mks_ui.src_main = lv_set_scr_id_title(mks_ui.src_main, SET_UI, "");
-#else
   scr = lv_screen_create(SET_UI);
-#endif
-
-  #if DISABLED(TFT_MIXWARE_LVGL_UI)
-
-	#else
-  lv_big_button_create(scr, MIMG.EEPROM,        MTR.flash,          IMAGEBTN_P_X(0), IMAGEBTN_P_Y(0), event_handler, ID_S_EEPROM_SET);
-  lv_big_button_create(scr, MIMG.configuration, MTR.ADVSet,         IMAGEBTN_P_X(1), IMAGEBTN_P_Y(1), event_handler, ID_S_MACHINE_PARA);
-  lv_big_button_create(scr, MIMG.about,         MTR.about,          IMAGEBTN_P_X(2), IMAGEBTN_P_Y(2), event_handler, ID_S_ABOUT);
-  lv_big_button_create(scr, MIMG.language,      MTR.language,       IMAGEBTN_P_X(3), IMAGEBTN_P_Y(3), event_handler, ID_S_LANGUAGE);
-  buttonFilamentDet = lv_imgbtn_create(scr, MUI.get_filament_detector_image_path(), IMAGEBTN_P_X(4), IMAGEBTN_P_Y(4), event_handler, ID_S_FILAMENT_DET);
-  lv_big_button_create(scr, MIMG.deviceDebug,   MTR.debugDevTitle,  IMAGEBTN_P_X(5), IMAGEBTN_P_Y(5), event_handler, ID_S_DEBUG);
-  MUI.page_button_return(scr, event_handler, ID_S_RETURN);
-
-  labelFilamentDet = lv_label_create_empty(buttonFilamentDet);
-  lv_label_set_text(labelFilamentDet, MUI.get_filament_detector_tr());
-  lv_obj_align(labelFilamentDet, buttonFilamentDet, LV_ALIGN_IN_BOTTOM_MID, 0, BUTTON_TEXT_Y_OFFSET);
-#endif
+  lv_big_button_create(scr, "F:/bmp_eeprom_settings.bin", set_menu.eepromSet, INTERVAL_V, titleHeight, event_handler, ID_S_EEPROM_SET);
+  lv_big_button_create(scr, "F:/bmp_fan.bin", set_menu.fan, BTN_X_PIXEL + INTERVAL_V * 2, titleHeight, event_handler, ID_S_FAN);
+  lv_big_button_create(scr, "F:/bmp_about.bin", set_menu.about, BTN_X_PIXEL * 2 + INTERVAL_V * 3, titleHeight, event_handler, ID_S_ABOUT);
+  lv_big_button_create(scr, ENABLED(HAS_SUICIDE) ? "F:/bmp_manual_off.bin" : "F:/bmp_function1.bin", set_menu.TERN(HAS_SUICIDE, shutdown, motoroff), BTN_X_PIXEL * 3 + INTERVAL_V * 4, titleHeight, event_handler, ID_S_MOTOR_OFF);
+  lv_big_button_create(scr, "F:/bmp_machine_para.bin", set_menu.machine_para, INTERVAL_V, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_S_MACHINE_PARA);
+  #if HAS_LANG_SELECT_SCREEN
+    lv_big_button_create(scr, "F:/bmp_language.bin", set_menu.language, BTN_X_PIXEL + INTERVAL_V * 2, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_S_LANGUAGE);
+  #endif
+  #if ENABLED(MKS_WIFI_MODULE)
+    lv_big_button_create(scr, "F:/bmp_wifi.bin", set_menu.wifi, BTN_X_PIXEL * 2 + INTERVAL_V * 3, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_S_WIFI);
+  #endif
+  lv_big_button_create(scr, "F:/bmp_return.bin", common_menu.text_back, BTN_X_PIXEL * 3 + INTERVAL_V * 4, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_S_RETURN);
 }
 
 void lv_clear_set() {
   #if HAS_ROTARY_ENCODER
     if (gCfgItems.encoder_enable) lv_group_remove_all_objs(g);
   #endif
-#ifndef USE_NEW_LVGL_CONF
   lv_obj_del(scr);
-#else
-  lv_obj_clean(mks_ui.src_main);
-#endif
 }
 
 #endif // HAS_TFT_LVGL_UI

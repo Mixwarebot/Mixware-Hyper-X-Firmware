@@ -53,54 +53,23 @@ void printer_state_polling() {
         uiCfg.waitEndMoves = 0;
         planner.synchronize();
 
-        gcode.process_subcommands_now_P(PSTR("M25"));
+        gcode.process_subcommands_now(F("M25"));
 
         // save the position
         uiCfg.current_x_position_bak = current_position.x;
         uiCfg.current_y_position_bak = current_position.y;
         uiCfg.current_z_position_bak = current_position.z;
 
-      #if DISABLED(TFT_MIXWARE_LVGL_UI)
         if (gCfgItems.pausePosZ != (float)-1) {
           sprintf_P(public_buf_l, PSTR("G91\nG1 Z%s\nG90"), dtostrf(gCfgItems.pausePosZ, 1, 1, str_1));
           gcode.process_subcommands_now(public_buf_l);
         }
         if (gCfgItems.pausePosX != (float)-1 && gCfgItems.pausePosY != (float)-1) {
-
           sprintf_P(public_buf_l, PSTR("G1 X%s Y%s"), dtostrf(gCfgItems.pausePosX, 1, 1, str_1), dtostrf(gCfgItems.pausePosY, 1, 1, str_1));
           gcode.process_subcommands_now(public_buf_l);
         }
         uiCfg.print_state = PAUSED;
         uiCfg.current_e_position_bak = current_position.e;
-      #else
-        if (gCfgItems.pausePosZ != (float)-1) {
-          gcode.process_subcommands_now(PSTR("G91"));
-          sprintf_P(public_buf_l, PSTR("G1 Z%s F1000"), dtostrf(gCfgItems.pausePosZ, 1, 1, str_1));
-          gcode.process_subcommands_now(public_buf_l);
-          gcode.process_subcommands_now(PSTR("G90"));
-        }
-        if (gCfgItems.pausePosX != (float)-1) {
-          sprintf_P(public_buf_l, PSTR("G1 X%s F2000"), dtostrf(gCfgItems.pausePosX, 1, 1, str_1));
-          gcode.process_subcommands_now(public_buf_l);
-        }
-        if (gCfgItems.pausePosY != (float)-1) {
-          sprintf_P(public_buf_l, PSTR("G1 Y%s F2000"), dtostrf(gCfgItems.pausePosY, 1, 1, str_1));
-          gcode.process_subcommands_now(public_buf_l);
-        }
-        uiCfg.print_state = PAUSED;
-        uiCfg.current_e_position_bak = current_position.e;
-        uiCfg.moveSpeed_bak = feedrate_mm_s;
-
-        #if ENABLED(POWER_LOSS_RECOVERY)
-          // Power off when printing is paused.
-          if (recovery.enabled) {
-            float print_paused_raised = gCfgItems.pausePosZ;
-            if (uiCfg.current_z_position_bak + gCfgItems.pausePosZ > Z_MAX_POS)
-              print_paused_raised = Z_MAX_POS - uiCfg.current_z_position_bak;
-            recovery.save(true, print_paused_raised, true);
-          }
-        #endif
-      #endif
 
         gCfgItems.pause_reprint = true;
         update_spi_flash();
@@ -111,7 +80,6 @@ void printer_state_polling() {
     uiCfg.waitEndMoves = 0;
 
   if (uiCfg.print_state == PAUSED) {
-    TERN_(TFT_MIXWARE_LVGL_UI, MUI.update_pause_print_ui());
   }
 
   if (uiCfg.print_state == RESUMING) {
@@ -125,20 +93,9 @@ void printer_state_polling() {
         sprintf_P(public_buf_m, PSTR("G1 Z%s"), dtostrf(uiCfg.current_z_position_bak, 1, 1, str_1));
         gcode.process_subcommands_now(public_buf_m);
       }
-
-      ZERO(public_buf_m);
-      sprintf_P(public_buf_m, PSTR("G92 E%s"),  dtostrf(uiCfg.current_e_position_bak, 1, 1, str_1));
-      gcode.process_subcommands_now(public_buf_m);
-
-      gcode.process_subcommands_now_P(M24_STR);
+      gcode.process_subcommands_now(FPSTR(M24_STR));
       uiCfg.print_state = WORKING;
       start_print_time();
-
-      #if ENABLED(TFT_MIXWARE_LVGL_UI)
-        detector.reset();
-
-        TERN_(POWER_LOSS_RECOVERY, if (recovery.enabled) recovery.save(true));
-      #endif
 
       gCfgItems.pause_reprint = false;
       update_spi_flash();
@@ -146,7 +103,6 @@ void printer_state_polling() {
   }
   #if ENABLED(POWER_LOSS_RECOVERY)
     if (uiCfg.print_state == REPRINTED) {
-  #if DISABLED(TFT_MIXWARE_LVGL_UI)
       #if HAS_HOTEND
         HOTEND_LOOP() {
           const int16_t et = recovery.info.target_temperature[e];
@@ -159,7 +115,6 @@ void printer_state_polling() {
             gcode.process_subcommands_now(public_buf_m);
           }
         }
-      #endif
       #endif
 
       recovery.resume();
@@ -179,7 +134,6 @@ void printer_state_polling() {
       #endif
       uiCfg.print_state = WORKING;
       start_print_time();
-      TERN_(TFT_MIXWARE_LVGL_UI, detector.reset());
 
       gCfgItems.pause_reprint = false;
       update_spi_flash();
@@ -190,24 +144,6 @@ void printer_state_polling() {
     filament_check();
 
   TERN_(MKS_WIFI_MODULE, wifi_looping());
-
-  #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
-    // if (uiCfg.autoLeveling) {
-    //   get_gcode_command(AUTO_LEVELING_COMMAND_ADDR, (uint8_t *)public_buf_m);
-    //   public_buf_m[sizeof(public_buf_m) - 1] = 0;
-    //   gcode.process_subcommands_now_P(PSTR(public_buf_m));
-    //   clear_cur_ui();
-    //   #if ANY(BLTOUCH, FIX_MOUNTED_PROBE)
-    //   bltouch_do_init(false);
-    //   lv_draw_bltouch_settings();
-    //   #endif
-
-    //   #ifdef TOUCH_MI_PROBE
-    //   lv_draw_touchmi_settings();
-    //   #endif
-    //   uiCfg.autoLeveling = 0;
-    // }
-  #endif
 }
 
 void filament_pin_setup() {
@@ -223,7 +159,6 @@ void filament_pin_setup() {
 }
 
 void filament_check() {
-  #if DISABLED(TFT_MIXWARE_LVGL_UI)
   #if ANY_PIN(MT_DET_1, MT_DET_2, MT_DET_3)
     const int FIL_DELAY = 20;
   #endif
@@ -274,9 +209,6 @@ void filament_check() {
 
     lv_draw_printing();
   }
-  #else
-    detector.check();
-  #endif
 }
 
 #endif // HAS_TFT_LVGL_UI

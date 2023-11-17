@@ -34,15 +34,10 @@
 #include "../../../sd/cardreader.h"
 #include "../../../inc/MarlinConfig.h"
 
-#ifndef USE_NEW_LVGL_CONF
 static lv_obj_t *scr;
-#endif
 extern lv_group_t*  g;
 
-static lv_obj_t
-                #if DISABLED(TFT_MIXWARE_LVGL_UI)
-                  *buttonPageUp, *buttonPageDown, *buttonBack,
-                #endif
+static lv_obj_t *buttonPageUp, *buttonPageDown, *buttonBack,
                 *buttonGcode[FILE_BTN_CNT], *labelPageUp[FILE_BTN_CNT], *buttonText[FILE_BTN_CNT];
 
 enum {
@@ -213,7 +208,7 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
 }
 
 void lv_draw_print_file() {
-
+  //uint8_t i;
   uint8_t file_count;
 
   curDirLever = 0;
@@ -232,41 +227,35 @@ void lv_draw_print_file() {
     file_count = search_file();
   #endif
   disp_gcode_icon(file_count);
-}
-// static char test_public_buf_l[40];
-static char test_public_buf_l[(SHORT_NAME_LEN + 1) * MAX_DIR_LEVEL + strlen("S:/") + 1];
 
+  //lv_obj_t *labelPageUp = lv_label_create_empty(buttonPageUp);
+  //lv_obj_t *labelPageDown = lv_label_create_empty(buttonPageDown);
+  //lv_obj_t *label_Back = lv_label_create_empty(buttonBack);
+
+  /*
+  if (gCfgItems.multiple_language) {
+    lv_label_set_text(labelPageUp, tool_menu.preheat);
+    lv_obj_align(labelPageUp, buttonPageUp, LV_ALIGN_IN_BOTTOM_MID,0, BUTTON_TEXT_Y_OFFSET);
+
+    lv_label_set_text(labelPageDown, tool_menu.extrude);
+    lv_obj_align(labelPageDown, buttonPageDown, LV_ALIGN_IN_BOTTOM_MID,0, BUTTON_TEXT_Y_OFFSET);
+
+    lv_label_set_text(label_Back, common_menu.text_back);
+    lv_obj_align(label_Back, buttonBack, LV_ALIGN_IN_BOTTOM_MID,0, BUTTON_TEXT_Y_OFFSET);
+  }
+  */
+}
+static char test_public_buf_l[40];
 void disp_gcode_icon(uint8_t file_num) {
   uint8_t i;
 
   // TODO: set current media title?!
-#ifndef USE_NEW_LVGL_CONF
   scr = lv_screen_create(PRINT_FILE_UI, "");
-#else
-  mks_ui.src_main = lv_set_scr_id_title(mks_ui.src_main, PRINT_FILE_UI, "");
-#endif
 
   // Create image buttons
-#ifndef USE_NEW_LVGL_CONF
-    MUI.page_placeholder(scr, 0, 0);
-
-    if (dir_offset[curDirLever].curPage > 0 && dir_offset[curDirLever].cur_page_last_offset > 0 && card.get_num_Files() > (dir_offset[curDirLever].curPage+1) * FILE_NUM) {
-      MUI.screen_bottom_button_left(scr, MTR.previous, event_handler, ID_P_UP);
-      MUI.page_bottom_button_middle(scr, MTR.next, event_handler, ID_P_DOWN);
-    }
-    else {
-      if (dir_offset[curDirLever].curPage > 0)
-        MUI.page_bottom_button_middle(scr, MTR.previous, event_handler, ID_P_UP);
-      else if (dir_offset[curDirLever].cur_page_last_offset > 0 && card.get_num_Files() > FILE_NUM)
-        MUI.page_bottom_button_middle(scr, MTR.next, event_handler, ID_P_DOWN);
-    }
-
-    MUI.page_button_return(scr, event_handler, ID_P_RETURN);
-#else
-  buttonPageUp   = lv_imgbtn_create(mks_ui.src_main, "F:/bmp_pageUp.bin", OTHER_BTN_XPIEL * 3 + INTERVAL_V * 4, titleHeight, event_handler, ID_P_UP);
-  buttonPageDown = lv_imgbtn_create(mks_ui.src_main, "F:/bmp_pageDown.bin", OTHER_BTN_XPIEL * 3 + INTERVAL_V * 4, titleHeight + OTHER_BTN_YPIEL + INTERVAL_H, event_handler, ID_P_DOWN);
-  buttonBack     = lv_imgbtn_create(mks_ui.src_main, "F:/bmp_back.bin", OTHER_BTN_XPIEL * 3 + INTERVAL_V * 4, titleHeight + OTHER_BTN_YPIEL * 2 + INTERVAL_H * 2, event_handler, ID_P_RETURN);
-#endif
+  buttonPageUp   = lv_imgbtn_create(scr, "F:/bmp_pageUp.bin", OTHER_BTN_XPIEL * 3 + INTERVAL_V * 4, titleHeight, event_handler, ID_P_UP);
+  buttonPageDown = lv_imgbtn_create(scr, "F:/bmp_pageDown.bin", OTHER_BTN_XPIEL * 3 + INTERVAL_V * 4, titleHeight + OTHER_BTN_YPIEL + INTERVAL_H, event_handler, ID_P_DOWN);
+  buttonBack     = lv_imgbtn_create(scr, "F:/bmp_back.bin", OTHER_BTN_XPIEL * 3 + INTERVAL_V * 4, titleHeight + OTHER_BTN_YPIEL * 2 + INTERVAL_H * 2, event_handler, ID_P_RETURN);
 
   // Create labels on the image buttons
   for (i = 0; i < FILE_BTN_CNT; i++) {
@@ -283,46 +272,30 @@ void disp_gcode_icon(uint8_t file_num) {
     if (i >= file_num) break;
 
     #ifdef TFT35
-  #ifndef USE_NEW_LVGL_CONF
       buttonGcode[i] = lv_imgbtn_create(scr, nullptr);
-  #else
-      buttonGcode[i] = lv_imgbtn_create(mks_ui.src_main, nullptr);
-  #endif
 
       lv_imgbtn_use_label_style(buttonGcode[i]);
       lv_obj_clear_protect(buttonGcode[i], LV_PROTECT_FOLLOW);
       lv_btn_set_layout(buttonGcode[i], LV_LAYOUT_OFF);
 
       ZERO(public_buf_m);
-      cutFileName((char *)list_file.long_name[i], 27, 27, (char *)public_buf_m);
+      cutFileName((char *)list_file.long_name[i], 16, 8, (char *)public_buf_m);
 
       if (list_file.IsFolder[i]) {
-        #if DISABLED(TFT_MIXWARE_LVGL_UI)
-          lv_obj_set_event_cb_mks(buttonGcode[i], event_handler, (i + 1), "", 0);
-          lv_imgbtn_set_src_both(buttonGcode[i], "F:/bmp_dir.bin");
-          if (i < 3)
-            lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * i + INTERVAL_V * (i + 1), titleHeight);
-          else
-            lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * (i - 3) + INTERVAL_V * ((i - 3) + 1), BTN_Y_PIXEL + INTERVAL_H + titleHeight);
+        lv_obj_set_event_cb_mks(buttonGcode[i], event_handler, (i + 1), "", 0);
+        lv_imgbtn_set_src_both(buttonGcode[i], "F:/bmp_dir.bin");
+        if (i < 3)
+          lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * i + INTERVAL_V * (i + 1), titleHeight);
+        else
+          lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * (i - 3) + INTERVAL_V * ((i - 3) + 1), BTN_Y_PIXEL + INTERVAL_H + titleHeight);
 
-          labelPageUp[i] = lv_label_create(buttonGcode[i], public_buf_m);
-          lv_obj_align(labelPageUp[i], buttonGcode[i], LV_ALIGN_IN_BOTTOM_MID, 0, -5);
-        #else
-          lv_obj_set_event_cb_mks(buttonGcode[i], event_handler, (i + 1), "", 0);
-          lv_imgbtn_set_src_both(buttonGcode[i], MIMG.dir);
-          if (i < FILE_BTN_CNT)
-            lv_obj_set_pos(buttonGcode[i], 0, titleHeight + 76 * i + INTERVAL_V * (i + 1));
-
-          labelPageUp[i] = lv_label_create(buttonGcode[i], public_buf_m);
-          lv_obj_align(labelPageUp[i], buttonGcode[i], LV_ALIGN_IN_LEFT_MID, 84, 5);
-        #endif
+        labelPageUp[i] = lv_label_create(buttonGcode[i], public_buf_m);
+        lv_obj_align(labelPageUp[i], buttonGcode[i], LV_ALIGN_IN_BOTTOM_MID, 0, -5);
       }
       else {
         if (have_pre_pic((char *)list_file.file_name[i])) {
 
           //lv_obj_set_event_cb_mks(buttonGcode[i], event_handler, (i + 1), list_file.file_name[i], 1);
-          memset(test_public_buf_l, 0, sizeof(test_public_buf_l));
-          memset(buttonGcode[i]->mks_pic_name, 0, sizeof(buttonGcode[i]->mks_pic_name));
 
           strcpy(test_public_buf_l, "S:");
           strcat(test_public_buf_l, list_file.file_name[i]);
@@ -332,11 +305,7 @@ void disp_gcode_icon(uint8_t file_num) {
           lv_imgbtn_set_src_both(buttonGcode[i], buttonGcode[i]->mks_pic_name);
           if (i < 3) {
             lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * i + INTERVAL_V * (i + 1) + FILE_PRE_PIC_X_OFFSET, titleHeight + FILE_PRE_PIC_Y_OFFSET);
-#ifndef USE_NEW_LVGL_CONF
             buttonText[i] = lv_btn_create(scr, nullptr);
-#else
-            buttonText[i] = lv_btn_create(mks_ui.src_main, nullptr);
-#endif
             //lv_obj_set_event_cb(buttonText[i], event_handler);
 
             lv_btn_use_label_style(buttonText[i]);
@@ -348,11 +317,7 @@ void disp_gcode_icon(uint8_t file_num) {
           }
           else {
             lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * (i - 3) + INTERVAL_V * ((i - 3) + 1) + FILE_PRE_PIC_X_OFFSET, BTN_Y_PIXEL + INTERVAL_H + titleHeight + FILE_PRE_PIC_Y_OFFSET);
-#ifndef USE_NEW_LVGL_CONF
             buttonText[i] = lv_btn_create(scr, nullptr);
-#else
-            buttonText[i] = lv_btn_create(mks_ui.src_main, nullptr);
-#endif
             //lv_obj_set_event_cb(buttonText[i], event_handler);
 
             lv_btn_use_label_style(buttonText[i]);
@@ -366,26 +331,15 @@ void disp_gcode_icon(uint8_t file_num) {
           lv_obj_align(labelPageUp[i], buttonText[i], LV_ALIGN_IN_BOTTOM_MID, 0, 0);
         }
         else {
-          #if DISABLED(TFT_MIXWARE_LVGL_UI)
-            lv_obj_set_event_cb_mks(buttonGcode[i], event_handler, (i + 1), "", 0);
-            lv_imgbtn_set_src_both(buttonGcode[i], "F:/bmp_file.bin");
-            if (i < 3)
-              lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * i + INTERVAL_V * (i + 1), titleHeight);
-            else
-              lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * (i - 3) + INTERVAL_V * ((i - 3) + 1), BTN_Y_PIXEL + INTERVAL_H + titleHeight);
+          lv_obj_set_event_cb_mks(buttonGcode[i], event_handler, (i + 1), "", 0);
+          lv_imgbtn_set_src_both(buttonGcode[i], "F:/bmp_file.bin");
+          if (i < 3)
+            lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * i + INTERVAL_V * (i + 1), titleHeight);
+          else
+            lv_obj_set_pos(buttonGcode[i], BTN_X_PIXEL * (i - 3) + INTERVAL_V * ((i - 3) + 1), BTN_Y_PIXEL + INTERVAL_H + titleHeight);
 
-            labelPageUp[i] = lv_label_create(buttonGcode[i], public_buf_m);
-            lv_obj_align(labelPageUp[i], buttonGcode[i], LV_ALIGN_IN_BOTTOM_MID, 0, -5);
-          #else
-            lv_obj_set_event_cb_mks(buttonGcode[i], event_handler, (i + 1), "", 0);
-            lv_imgbtn_set_src_both(buttonGcode[i], MIMG.file);
-
-            if (i < FILE_BTN_CNT) {
-              lv_obj_set_pos(buttonGcode[i], 0, titleHeight + 76 * i + INTERVAL_V * (i + 1));
-            }
-            labelPageUp[i] = lv_label_create(buttonGcode[i], public_buf_m);
-            lv_obj_align(labelPageUp[i], buttonGcode[i], LV_ALIGN_IN_LEFT_MID, 84, 5);
-          #endif
+          labelPageUp[i] = lv_label_create(buttonGcode[i], public_buf_m);
+          lv_obj_align(labelPageUp[i], buttonGcode[i], LV_ALIGN_IN_BOTTOM_MID, 0, -5);
         }
       }
       #if HAS_ROTARY_ENCODER
@@ -395,17 +349,6 @@ void disp_gcode_icon(uint8_t file_num) {
     #else // !TFT35
     #endif // !TFT35
   }
-
-  if(file_num != 0) {
-    if (have_pre_pic((char *)list_file.file_name[0])) {
-        strcpy(test_public_buf_l, "S:");
-        strcat(test_public_buf_l, list_file.file_name[0]);
-        char *temp = strstr(test_public_buf_l, ".GCO");
-        if (temp) strcpy(temp, ".bin");
-        lv_imgbtn_set_src_both(buttonGcode[0], buttonGcode[0]->mks_pic_name);
-    }
-  }
-
   #if HAS_ROTARY_ENCODER
     if (gCfgItems.encoder_enable) {
       lv_group_add_obj(g, buttonPageUp);
@@ -426,7 +369,7 @@ uint32_t lv_open_gcode_file(char *path) {
     card.openFileRead(cur_name);
     card.read(public_buf, 512);
     ps4 = (uint32_t *)strstr((char *)public_buf, ";simage:");
-    // Ignore the beginning message of gcode file
+    // Ignore the beginning message of G-code file
     if (ps4) {
       pre_sread_cnt = (uintptr_t)ps4 - (uintptr_t)((uint32_t *)(&public_buf[0]));
       card.setIndex(pre_sread_cnt);
@@ -459,7 +402,7 @@ void lv_gcode_file_read(uint8_t *data_buf) {
     char temp_test[200];
     volatile uint16_t *p_index;
 
-    watchdog_refresh();
+    hal.watchdog_refresh();
     memset(public_buf, 0, 200);
 
     while (card.isFileOpen()) {
@@ -529,7 +472,7 @@ void cutFileName(char *path, int len, int bytePerLine, char *outStr) {
   #else
     char *tmpFile;
     char *strIndex1 = 0, *strIndex2 = 0, *beginIndex;
-    char secSeg[20] = {0};
+    char secSeg[10] = {0};
   #endif
 
   if (path == 0 || len <= 3 || outStr == 0) return;
@@ -547,7 +490,7 @@ void cutFileName(char *path, int len, int bytePerLine, char *outStr) {
                 //&& (strIndex2 != 0) && (strIndex1 < strIndex2)
                 ) ? strIndex1 + 1 : tmpFile;
 
-  if (strIndex2 == 0 || (strIndex1 > strIndex2)) { // not gcode file
+  if (strIndex2 == 0 || (strIndex1 > strIndex2)) { // not G-code file
     #if _LFN_UNICODE
       if (wcslen(beginIndex) > len)
         wcsncpy(outStr, beginIndex, len);
@@ -560,15 +503,15 @@ void cutFileName(char *path, int len, int bytePerLine, char *outStr) {
         strcpy(outStr, beginIndex);
     #endif
   }
-  else { // gcode file
-    if (strIndex2 - beginIndex > (len - 8)) {
+  else { // G-code file
+    if (strIndex2 - beginIndex > (len - 2)) {
       #if _LFN_UNICODE
         wcsncpy(outStr, (const WCHAR *)beginIndex, len - 3);
         wcscat(outStr, (const WCHAR *)gFileTail);
       #else
         //strncpy(outStr, beginIndex, len - 3);
-        strncpy(outStr, beginIndex, len - 6);
-        strcat_P(outStr, PSTR("~.gco"));
+        strncpy(outStr, beginIndex, len - 4);
+        strcat_P(outStr, PSTR("~.g"));
       #endif
     }
     else {
@@ -577,7 +520,7 @@ void cutFileName(char *path, int len, int bytePerLine, char *outStr) {
         wcscat(outStr, (const WCHAR *)&gFileTail[3]);
       #else
         strncpy(outStr, beginIndex, strIndex2 - beginIndex + 1);
-        strcat_P(outStr, PSTR("gcode"));
+        strcat_P(outStr, PSTR("g"));
       #endif
     }
   }
@@ -606,12 +549,7 @@ void lv_clear_print_file() {
   #if HAS_ROTARY_ENCODER
     if (gCfgItems.encoder_enable) lv_group_remove_all_objs(g);
   #endif
-
-#ifndef USE_NEW_LVGL_CONF
   lv_obj_del(scr);
-#else
-  lv_obj_clean(mks_ui.src_main);
-#endif
 }
 
 #endif // HAS_TFT_LVGL_UI

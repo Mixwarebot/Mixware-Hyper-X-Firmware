@@ -100,7 +100,7 @@ extern EX_FILAMENT_DEF ex_filament;
 typedef enum {
   UNRUNOUT_STATUS,
   RUNOUT_STATUS,
-  RUNOUT_WAITTING_STATUS,
+  RUNOUT_WAITING_STATUS,
   RUNOUT_BEGIN_STATUS,
 } RUNOUT_MKS_STATUS_DEF;
 
@@ -131,7 +131,7 @@ enum DGUSLCD_Screens : uint8_t {
     DGUSLCD_SCREEN_MAIN                 =  60,
     DGUSLCD_SCREEN_STATUS               =  60,
     DGUSLCD_SCREEN_STATUS2              =  60,
-    // DGUSLCD_SCREEN_PREHEAT              =  18,
+    DGUSLCD_SCREEN_PREHEAT              =  18,
     DGUSLCD_SCREEN_POWER_LOSS           = 100,
     DGUSLCD_SCREEN_MANUALMOVE           = 192,
     DGUSLCD_SCREEN_UTILITY              = 120,
@@ -141,46 +141,40 @@ enum DGUSLCD_Screens : uint8_t {
     DGUSLCD_SCREEN_SDPRINTTUNE          =  17,
 
     MKSLCD_SCREEN_BOOT                  =  33,
-    MKSLCD_FILAMENT_DATA                =  50,
     MKSLCD_SCREEN_HOME                  =  60,   // MKS main page
     MKSLCD_SCREEN_SETTING               =  62,   // MKS Setting page / no wifi whit
     MKSLCD_SCREEM_TOOL                  =  64,   // MKS Tool page
+    MKSLCD_SCREEN_EXTRUDE_P1            =  75,
+    MKSLCD_SCREEN_EXTRUDE_P2            =  77,
+    MKSLCD_SCREEN_LEVEL                 =  73,
+    MKSLCD_AUTO_LEVEL                   =  81,
     MKSLCD_SCREEN_MOVE                  =  66,
     MKSLCD_SCREEN_PRINT                 =  68,
     MKSLCD_SCREEN_PAUSE                 =  70,
-    MKSLCD_SCREEN_PRINT_CONFIG          =  72,
-    MKSLCD_SCREEN_LEVEL                 =  73,
-    MKSLCD_SCREEN_EXTRUDE_P1            =  75,
-    MKSLCD_SCREEN_EXTRUDE_P2            =  77,
-    MKSLCD_SCREEN_LEVELING              =  78,
-    MKSLCD_Screen_Baby                  =  79,
-    MKSLCD_Screen_Baby2                 =  80,
-    MKSLCD_AUTO_LEVEL                   =  81,
-    MKSLCD_AUTO_LEVEL2                  =  82,
-    MKSLCD_ABOUT                        =  83,
     MKSLCD_SCREEN_CHOOSE_FILE           =  87,
-    MKSLCD_SCREEN_LEVEL_SELECT          =  88,
-    MKSLCD_SCREEN_EEP_Config            =  89,
-    MKSLCD_SCREEN_LEVEL_ERR             =  89,
-    MKSLCD_SCREEN_LEVEL_DONE            =  91,
-    MKSLCD_SCREEN_PrintDone             =  92,
-    MKSLCD_SCREEN_PRINT_CONFIRM         =  94,
-    MKSLCD_PAUSE_SETTING_EX             =  96,
-    MKSLCD_PAUSE_SETTING_EX2            =  97,
-    MKSLCD_Screen_PMove                 =  98,
-    MKSLCD_PAUSE_SETTING_MOVE           =  98,
+    MKSLCD_SCREEN_NO_CHOOSE_FILE        =  88,
     MKSLCD_SCREEN_Config                = 101,
-    MKSLCD_SCREEN_MOTOR_SPEED           = 102,
     MKSLCD_SCREEN_Config_MOTOR          = 103,
     MKSLCD_SCREEN_MOTOR_PLUSE           = 104,
+    MKSLCD_SCREEN_MOTOR_SPEED           = 102,
     MKSLCD_SCREEN_MOTOR_ACC_MAX         = 105,
+    MKSLCD_SCREEN_PRINT_CONFIG          =  72,
     MKSLCD_SCREEN_LEVEL_DATA            = 106,
     MKSLCD_PrintPause_SET               = 107,
+    MKSLCD_FILAMENT_DATA                =  50,
+    MKSLCD_ABOUT                        =  83,
     MKSLCD_PID                          = 108,
-    MKSLCD_Screen_Offset_Config         = 109,
-    MKSLCD_Screen_Advance_Config        = 110,
-    MKSLCD_SCREEN_TMC_Config            = 111,
+    MKSLCD_PAUSE_SETTING_MOVE           =  98,
+    MKSLCD_PAUSE_SETTING_EX             =  96,
+    MKSLCD_PAUSE_SETTING_EX2            =  97,
+    MKSLCD_SCREEN_PRINT_CONFIRM         =  94,
     MKSLCD_SCREEN_EX_CONFIG             = 112,
+    MKSLCD_SCREEN_EEP_Config            =  89,
+    MKSLCD_SCREEN_PrintDone             =  92,
+    MKSLCD_SCREEN_TMC_Config            = 111,
+    MKSLCD_Screen_Offset_Config         = 109,
+    MKSLCD_Screen_PMove                 =  98,
+    MKSLCD_Screen_Baby                  =  79,
 
   #else
 
@@ -239,19 +233,6 @@ enum DGUSLCD_Screens : uint8_t {
     MKSLCD_Screen_Baby                  =  71,
 
   #endif
-
-  DGUSLCD_SCREEN_PREHEAT                = 130,
-  DGUSLCD_SCREEN_TEMPERATURE_1          = 69,
-  DGUSLCD_SCREEN_TEMPERATURE_2          = 71,
-  DGUSLCD_SCREEN_TEMPERATURE_3          = 74,
-  DGUSLCD_SCREEN_TEMPERATURE_4          = 76,
-  DGUSLCD_SCREEN_FAN_LIGHT_1            = 61,
-  DGUSLCD_SCREEN_FAN_LIGHT_2            = 63,
-  DGUSLCD_SCREEN_FAN_LIGHT_3            = 65,
-  DGUSLCD_SCREEN_FAN_LIGHT_4            = 67,
-  DGUSLCD_SCREEN_FILAMENT_REPLACE       = 132,
-  DGUSLCD_SCREEN_ACCELERATION           = 113,
-  DGUSLCD_SCREEN_JERK_SPEED             = 114,
 
   DGUSLCD_SCREEN_CONFIRM                = 240,
   DGUSLCD_SCREEN_KILL                   = 250, ///< Kill Screen. Must always be 250 (to be able to display "Error wrong LCD Version")
@@ -335,12 +316,21 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_T_E0_Set                      = 0x2004;   // 2 Byte Integer
   constexpr uint16_t VP_T_E1_Is                       = 0x2008;   // 4 Byte Integer
   constexpr uint16_t VP_T_E1_Set                      = 0x200B;   // 2 Byte Integer
+  constexpr uint16_t VP_T_E2_Is                       = 0x2010;   // 4 Byte Integer
+  constexpr uint16_t VP_T_E2_Set                      = 0x2014;   // 2 Byte Integer
+  constexpr uint16_t VP_T_E3_Is                       = 0x2018;   // 4 Byte Integer
+  constexpr uint16_t VP_T_E3_Set                      = 0x201B;   // 2 Byte Integer
+  constexpr uint16_t VP_T_E4_Is                       = 0x2020;   // 4 Byte Integer
+  constexpr uint16_t VP_T_E4_Set                      = 0x2024;   // 2 Byte Integer
+  constexpr uint16_t VP_T_E5_Is                       = 0x2028;   // 4 Byte Integer
+  constexpr uint16_t VP_T_E5_Set                      = 0x202B;   // 2 Byte Integer
+  constexpr uint16_t VP_T_E6_Is                       = 0x2030;   // 4 Byte Integer
+  constexpr uint16_t VP_T_E6_Set                      = 0x2034;   // 2 Byte Integer
+  constexpr uint16_t VP_T_E7_Is                       = 0x2038;   // 4 Byte Integer
+  constexpr uint16_t VP_T_E7_Set                      = 0x203B;   // 2 Byte Integer
 
   constexpr uint16_t VP_T_Bed_Is                      = 0x2040;   // 4 Byte Integer
   constexpr uint16_t VP_T_Bed_Set                     = 0x2044;   // 2 Byte Integer
-
-  constexpr uint16_t VP_T_Chamber_Is                  = 0x2010;   // 4 Byte Integer
-  constexpr uint16_t VP_T_Chamber_Set                 = 0x2014;   // 2 Byte Integer
 
   constexpr uint16_t VP_Min_EX_T_E                    = 0x2100;
 
@@ -359,12 +349,12 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_MOVE_Z                        = 0x2304;
   constexpr uint16_t VP_MOVE_E0                       = 0x2310;
   constexpr uint16_t VP_MOVE_E1                       = 0x2312;
-  constexpr uint16_t VP_MOVE_X2                       = 0x2314;
-  // constexpr uint16_t VP_MOVE_E3                       = 0x2316;
-  // constexpr uint16_t VP_MOVE_E4                       = 0x2318;
-  // constexpr uint16_t VP_MOVE_E5                       = 0x231A;
-  // constexpr uint16_t VP_MOVE_E6                       = 0x231C;
-  // constexpr uint16_t VP_MOVE_E7                       = 0x231E;
+  constexpr uint16_t VP_MOVE_E2                       = 0x2314;
+  constexpr uint16_t VP_MOVE_E3                       = 0x2316;
+  constexpr uint16_t VP_MOVE_E4                       = 0x2318;
+  constexpr uint16_t VP_MOVE_E5                       = 0x231A;
+  constexpr uint16_t VP_MOVE_E6                       = 0x231C;
+  constexpr uint16_t VP_MOVE_E7                       = 0x231E;
   constexpr uint16_t VP_HOME_ALL                      = 0x2320;
   constexpr uint16_t VP_MOTOR_LOCK_UNLOK              = 0x2330;
   constexpr uint16_t VP_MOVE_DISTANCE                 = 0x2334;
@@ -380,28 +370,12 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_FAN4_CONTROL                  = 0x2358;
   constexpr uint16_t VP_FAN5_CONTROL                  = 0x235A;
 
-  constexpr uint16_t VP_EXT_L_MANUAL                  = 0x2360;
-  constexpr uint16_t VP_EXT_R_MANUAL                  = 0x2362;
-  constexpr uint16_t VP_BED_MANUAL                    = 0x2364;
-  constexpr uint16_t VP_CHAMBER_MANUAL                = 0x2366;
-  constexpr uint16_t VP_FAN_L_MANUAL                  = 0x2368;
-  constexpr uint16_t VP_FAN_R_MANUAL                  = 0x236A;
-  constexpr uint16_t VP_FAN_C_MANUAL                  = 0x236C;
-  constexpr uint16_t VP_LIGHT_MANUAL                  = 0x236E;
-
   constexpr uint16_t VP_LANGUAGE_CHANGE               = 0x2380;
   constexpr uint16_t VP_LANGUAGE_CHANGE1              = 0x2382;
   constexpr uint16_t VP_LANGUAGE_CHANGE2              = 0x2384;
   constexpr uint16_t VP_LANGUAGE_CHANGE3              = 0x2386;
   constexpr uint16_t VP_LANGUAGE_CHANGE4              = 0x2388;
   constexpr uint16_t VP_LANGUAGE_CHANGE5              = 0x238A;
-
-  constexpr uint16_t VP_TEMP_Mode_L                   = 0x2390;
-  constexpr uint16_t VP_TEMP_Mode_L_N                 = 0x2392;
-  constexpr uint16_t VP_TEMP_Mode_L_H                 = 0x2394;
-  constexpr uint16_t VP_TEMP_Mode_R                   = 0x2396;
-  constexpr uint16_t VP_TEMP_Mode_R_N                 = 0x2398;
-  constexpr uint16_t VP_TEMP_Mode_R_H                 = 0x239A;
 
   // LEVEL
   constexpr uint16_t VP_LEVEL_POINT                   = 0x2400;
@@ -413,19 +387,12 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_LEVEL_BUTTON                  = 0x2420;
   constexpr uint16_t VP_MESH_LEVEL_POINT_DIS          = 0x2422;
   constexpr uint16_t VP_MESH_LEVEL_BACK               = 0x2424;
-  constexpr uint16_t VP_PREHEAT_BUTTON                = 0x2426;
-  constexpr uint16_t VP_FAN_BUTTON                    = 0x2428;
-  constexpr uint16_t VP_TEMPERATURE_BUTTON            = 0x242A;
-  constexpr uint16_t VP_FAN_LIGHT_BUTTON              = 0x242C;
-  constexpr uint16_t VP_BABYSTEP_BUTTON               = 0x242E;
 
   constexpr uint16_t VP_E0_FILAMENT_LOAD_UNLOAD       = 0x2500;
   constexpr uint16_t VP_E1_FILAMENT_LOAD_UNLOAD       = 0x2504;
   constexpr uint16_t VP_LOAD_Filament                 = 0x2508;
   // constexpr uint16_t VP_LOAD_UNLOAD_Cancle            = 0x250A;
-  constexpr uint16_t VP_UNLOAD_Filament               = 0x250A;
-  constexpr uint16_t VP_RELOADING_IN                  = 0x250C;
-  constexpr uint16_t VP_RELOADING_OUT                 = 0x250E;
+  constexpr uint16_t VP_UNLOAD_Filament               = 0x250B;
   constexpr uint16_t VP_Filament_distance             = 0x2600;
   constexpr uint16_t VP_Filament_speed                = 0x2604;
   constexpr uint16_t VP_MIN_EX_T                      = 0x2606;
@@ -438,17 +405,13 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_Fan1_Percentage               = 0x2702;   // 2 Byte Integer (0..100)
   constexpr uint16_t VP_Fan2_Percentage               = 0x2704;   // 2 Byte Integer (0..100)
   constexpr uint16_t VP_Fan3_Percentage               = 0x2706;   // 2 Byte Integer (0..100)
-  constexpr uint16_t VP_Fan4_Percentage               = 0x2708;   // 2 Byte Integer (0..100)
-  constexpr uint16_t VP_Fan5_Percentage               = 0x270A;   // 2 Byte Integer (0..100)
-  constexpr uint16_t VP_Feedrate_Percentage           = 0x270C;   // 2 Byte Integer (0..100)
+  constexpr uint16_t VP_Feedrate_Percentage           = 0x2708;   // 2 Byte Integer (0..100)
 
   // Fan status
   constexpr uint16_t VP_FAN0_STATUS                   = 0x2710;
   constexpr uint16_t VP_FAN1_STATUS                   = 0x2712;
   constexpr uint16_t VP_FAN2_STATUS                   = 0x2714;
   constexpr uint16_t VP_FAN3_STATUS                   = 0x2716;
-  constexpr uint16_t VP_FAN4_STATUS                   = 0x2718;
-  constexpr uint16_t VP_FAN5_STATUS                   = 0x271A;
 
   // Step per mm
   constexpr uint16_t VP_X_STEP_PER_MM                 = 0x2900;   // at the moment , 2 byte unsigned int , 0~1638.4
@@ -456,12 +419,12 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_Z_STEP_PER_MM                 = 0x2908;
   constexpr uint16_t VP_E0_STEP_PER_MM                = 0x2910;
   constexpr uint16_t VP_E1_STEP_PER_MM                = 0x2912;
-  constexpr uint16_t VP_X2_STEP_PER_MM                = 0x2914;
-  // constexpr uint16_t VP_E3_STEP_PER_MM                = 0x2916;
-  // constexpr uint16_t VP_E4_STEP_PER_MM                = 0x2918;
-  // constexpr uint16_t VP_E5_STEP_PER_MM                = 0x291A;
-  // constexpr uint16_t VP_E6_STEP_PER_MM                = 0x291C;
-  // constexpr uint16_t VP_E7_STEP_PER_MM                = 0x291E;
+  constexpr uint16_t VP_E2_STEP_PER_MM                = 0x2914;
+  constexpr uint16_t VP_E3_STEP_PER_MM                = 0x2916;
+  constexpr uint16_t VP_E4_STEP_PER_MM                = 0x2918;
+  constexpr uint16_t VP_E5_STEP_PER_MM                = 0x291A;
+  constexpr uint16_t VP_E6_STEP_PER_MM                = 0x291C;
+  constexpr uint16_t VP_E7_STEP_PER_MM                = 0x291E;
 
   constexpr uint16_t VP_X_MAX_SPEED                   = 0x2A00;
   constexpr uint16_t VP_Y_MAX_SPEED                   = 0x2A04;
@@ -480,12 +443,6 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_T_F_SPEED                     = 0x2A44;
   constexpr uint16_t VP_ACC_SPEED                     = 0x2A48;
 
-  constexpr uint16_t VP_X_JERK_SPEED                  = 0x2A50;
-  constexpr uint16_t VP_Y_JERK_SPEED                  = 0x2A54;
-  constexpr uint16_t VP_Z_JERK_SPEED                  = 0x2A58;
-  constexpr uint16_t VP_E0_JERK_SPEED                 = 0x2A5c;
-  constexpr uint16_t VP_E1_JERK_SPEED                 = 0x2A60;
-
   /* -------------------------------0x3000-0x3FFF------------------------------- */
   // Buttons on the SD-Card File listing.
   constexpr uint16_t VP_SD_ScrollEvent                = 0x3020; // Data: 0 for "up a directory", numbers are the amount to scroll, e.g -1 one up, 1 one down
@@ -498,8 +455,6 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_SD_Print_LiveAdjustZ_Confirm  = 0x3060;
   constexpr uint16_t VP_ZOffset_Distance              = 0x3070;
   constexpr uint16_t VP_ZOffset_DE_DIS                = 0x3080;
-  constexpr uint16_t VP_SD_Print_LiveAdjustX          = 0x3090; // Data: 0 down, 1 up
-  constexpr uint16_t VP_SD_Print_LiveAdjustY          = 0x30A0; // Data: 0 down, 1 up
   constexpr uint16_t VP_SD_FileSelect_Back            = 0x3082;
   // SDCard File Listing
   constexpr uint16_t VP_SD_FileName_LEN = 32;                   // LEN is shared for all entries.
@@ -536,9 +491,16 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
 
   constexpr uint16_t VP_File_Pictutr0                 = 0x3400;
   constexpr uint16_t VP_File_Pictutr1                 = 0x3402;
+  constexpr uint16_t VP_File_Pictutr2                 = 0x3404;
+  constexpr uint16_t VP_File_Pictutr3                 = 0x3406;
+  constexpr uint16_t VP_File_Pictutr4                 = 0x3408;
+  constexpr uint16_t VP_File_Pictutr5                 = 0x340A;
+  constexpr uint16_t VP_File_Pictutr6                 = 0x340C;
+  constexpr uint16_t VP_File_Pictutr7                 = 0x340E;
+  constexpr uint16_t VP_File_Pictutr8                 = 0x3410;
+  constexpr uint16_t VP_File_Pictutr9                 = 0x3412;
 
   constexpr uint16_t VP_BED_STATUS                    = 0x341C;
-  constexpr uint16_t VP_Chamber_STATUS                = 0x341e;
 
   constexpr uint16_t VP_TMC_X_STEP                    = 0x3430;
   constexpr uint16_t VP_TMC_Y_STEP                    = 0x3432;
@@ -574,9 +536,6 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_OFFSET_X = 0x3724;
   constexpr uint16_t VP_OFFSET_Y = 0x3728;
   constexpr uint16_t VP_OFFSET_Z = 0x372B;
-  constexpr uint16_t VP_OFFSET_X2 = 0x3734;
-  constexpr uint16_t VP_OFFSET_Y2 = 0x3738;
-  constexpr uint16_t VP_OFFSET_Z2 = 0x373B;
 
   // PID autotune
   constexpr uint16_t VP_PID_AUTOTUNE_E0 = 0x3800;
@@ -591,10 +550,6 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
 
   constexpr uint16_t VP_AutoTurnOffSw = 0x3812;
   constexpr uint16_t VP_LCD_BLK = 0x3814;
-  constexpr uint16_t VP_DetectorFil_L_SW = 0x3816;
-  constexpr uint16_t VP_DetectorFil_R_SW = 0x3818;
-  constexpr uint16_t VP_TEMP_Protect_SW = 0x381A;
-  constexpr uint16_t VP_PowerLossRec_SW = 0x381C;
 
   constexpr uint16_t VP_X_PARK_POS = 0x3900;
   constexpr uint16_t VP_Y_PARK_POS = 0x3902;
@@ -609,7 +564,6 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   //constexpr uint16_t VP_E4_CONTROL = 0x2218;
   //constexpr uint16_t VP_E5_CONTROL = 0x221A;
   constexpr uint16_t VP_BED_CONTROL = 0x401C;
-  constexpr uint16_t VP_Chamber_CONTROL = 0x401E;
 
   // Preheat
   constexpr uint16_t VP_E0_BED_PREHEAT = 0x4020;
@@ -709,25 +663,25 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
 
   constexpr uint16_t VP_AutoLevel_1_Dis               = 0x55F0;
 
-  // constexpr uint16_t VP_TMC_X_Step_Dis                = 0x5530;
-  // constexpr uint16_t VP_TMC_Y_Step_Dis                = 0x5540;
-  // constexpr uint16_t VP_TMC_Z_Step_Dis                = 0x5550;
+  constexpr uint16_t VP_TMC_X_Step_Dis                = 0x5530;
+  constexpr uint16_t VP_TMC_Y_Step_Dis                = 0x5540;
+  constexpr uint16_t VP_TMC_Z_Step_Dis                = 0x5550;
   constexpr uint16_t VP_TMC_X1_Current_Dis            = 0x5560;
-  // constexpr uint16_t VP_TMC_Y1_Current_Dis            = 0x5570;
+  constexpr uint16_t VP_TMC_Y1_Current_Dis            = 0x5570;
   constexpr uint16_t VP_TMC_X_Current_Dis             = 0x5580;
   constexpr uint16_t VP_TMC_Y_Current_Dis             = 0x5590;
   constexpr uint16_t VP_TMC_Z_Current_Dis             = 0x55A0;
   constexpr uint16_t VP_TMC_E0_Current_Dis            = 0x55B0;
   constexpr uint16_t VP_TMC_E1_Current_Dis            = 0x55C0;
-  // constexpr uint16_t VP_TMC_Z1_Current_Dis            = 0x55E0;
+  constexpr uint16_t VP_TMC_Z1_Current_Dis            = 0x55E0;
 
   constexpr uint16_t VP_AutoLEVEL_INFO1               = 0x5600;
   constexpr uint16_t VP_EX_TEMP_INFO1_Dis             = 0x5610;
   constexpr uint16_t VP_EX_TEMP_INFO2_Dis             = 0x5620;
   constexpr uint16_t VP_EX_TEMP_INFO3_Dis             = 0x5630;
   constexpr uint16_t VP_LCD_BLK_Dis                   = 0x56A0;
-  constexpr uint16_t VP_Info_PrinfFinsh_1_Dis         = 0x5C00;
-  constexpr uint16_t VP_Info_PrinfFinsh_2_Dis         = 0x5C10;
+  constexpr uint16_t VP_Info_PrintFinish_1_Dis        = 0x5C00;
+  constexpr uint16_t VP_Info_PrintFinish_2_Dis        = 0x5C10;
 
   constexpr uint16_t VP_Length_Dis                    = 0x5B00;
 
@@ -754,49 +708,5 @@ constexpr uint16_t SP_T_Bed_Set   = 0x5040;
   constexpr uint16_t VP_LevelConfig_Dis               = 0x5110;
   constexpr uint16_t VP_Advance_Dis                   = 0x5130;
   constexpr uint16_t VP_TemperatureConfig_Dis         = 0x5390;
-
-  constexpr uint16_t VP_Chamber_Dis                   = 0x5260;//MIX
-  constexpr uint16_t VP_Preheat_Dis                   = 0x5A90;//MIX
-  constexpr uint16_t VP_Preheat_Cool_Dis              = 0x6000;//MIX
-  constexpr uint16_t VP_Preheat_PLA_Dis               = 0x6010;//MIX
-  constexpr uint16_t VP_Preheat_ABS_Dis               = 0x6020;//MIX
-  constexpr uint16_t VP_Preheat_PETG_Dis              = 0x6030;//MIX
-  constexpr uint16_t VP_ReplaceFil_Dis                = 0x6100;//MIX
-  constexpr uint16_t VP_ReplaceFil_In_Dis             = 0x6110;//MIX
-  constexpr uint16_t VP_ReplaceFil_Out_Dis            = 0x6120;//MIX
-  constexpr uint16_t VP_Fan_Dis                       = 0x6200;//MIX
-  constexpr uint16_t VP_DetectorFil_Dis               = 0x6300;//MIX
-  constexpr uint16_t VP_Babystep_Dis                  = 0x6400;//MIX
-  constexpr uint16_t VP_MotorAcc_Dis                  = 0x6500;//MIX
-  constexpr uint16_t VP_MotorJerk_Dis                 = 0x6510;//MIX
-  constexpr uint16_t VP_X_JERK_Dis                    = 0x6520;//MIX
-  constexpr uint16_t VP_Y_JERK_Dis                    = 0x6530;//MIX
-  constexpr uint16_t VP_Z_JERK_Dis                    = 0x6540;//MIX
-  constexpr uint16_t VP_E0_JERK_Dis                   = 0x6550;//MIX
-  constexpr uint16_t VP_E1_JERK_Dis                   = 0x6560;//MIX
-  constexpr uint16_t VP_Fil_Det_Dis                   = 0x6570;//MIX
-  constexpr uint16_t VP_TEMP_Mode_Dis                 = 0x6580;//MIX
-  constexpr uint16_t VP_TEMP_Protect_Dis              = 0x6590;//MIX
-  constexpr uint16_t VP_Power_Loss_R_Dis              = 0x65A0;//MIX
-  constexpr uint16_t VP_Fil_Det_L_Dis                 = 0x65B0;//MIX
-  constexpr uint16_t VP_Fil_Det_R_Dis                 = 0x65C0;//MIX
-  constexpr uint16_t VP_TEMP_Mode_L_N_Dis             = 0x65D0;//MIX
-  constexpr uint16_t VP_TEMP_Mode_L_H_Dis             = 0x65E0;//MIX
-  constexpr uint16_t VP_TEMP_Mode_R_N_Dis             = 0x65F0;//MIX
-  constexpr uint16_t VP_TEMP_Mode_R_H_Dis             = 0x6600;//MIX
-  constexpr uint16_t VP_Level_Working_Dis             = 0x6610;//MIX
-  constexpr uint16_t VP_Level_Failed_Dis              = 0x6620;//MIX
-  constexpr uint16_t VP_Level_Done_Dis                = 0x6630;//MIX
-  constexpr uint16_t VP_Levelsec_Auto_Dis             = 0x6640;//MIX
-  constexpr uint16_t VP_Levelsec_Manual_Dis           = 0x6650;//MIX
-  constexpr uint16_t VP_Levelsec_Adj_L_Dis            = 0x6660;//MIX
-  constexpr uint16_t VP_Levelsec_Adj_R_Dis            = 0x6670;//MIX
-  constexpr uint16_t VP_Confirm_Dis                   = 0x6680;//MIX
-  constexpr uint16_t VP_Cancel_Dis                    = 0x6690;//MIX
-  constexpr uint16_t VP_Adjust_Dis                    = 0x66A0;//MIX
-  constexpr uint16_t VP_Reloading_Dis                 = 0x66B0;//MIX
-  constexpr uint16_t VP_Reloading_Btn_Dis             = 0x66C0;//MIX
-  constexpr uint16_t VP_Babystep_Up_Dis               = 0x66D0;//MIX
-  constexpr uint16_t VP_Babystep_Dn_Dis               = 0x66E0;//MIX
 
 #endif // MKS_FINSH

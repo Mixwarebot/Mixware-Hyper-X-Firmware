@@ -80,10 +80,9 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
 }
 
 void lv_draw_step_settings() {
-  #if DISABLED(TFT_MIXWARE_LVGL_UI)
-    scr = lv_screen_create(STEPS_UI, machine_menu.StepsConfTitle);
+  scr = lv_screen_create(STEPS_UI, machine_menu.StepsConfTitle);
 
-    if (!uiCfg.para_ui_page) {
+  if (!uiCfg.para_ui_page) {
     dtostrf(planner.settings.axis_steps_per_mm[X_AXIS], 1, 1, public_buf_l);
     lv_screen_menu_item_1_edit(scr, machine_menu.X_Steps, PARA_UI_POS_X, PARA_UI_POS_Y, event_handler, ID_STEP_X, 0, public_buf_l);
 
@@ -96,39 +95,16 @@ void lv_draw_step_settings() {
     dtostrf(planner.settings.axis_steps_per_mm[E_AXIS], 1, 1, public_buf_l);
     lv_screen_menu_item_1_edit(scr, machine_menu.E0_Steps, PARA_UI_POS_X, PARA_UI_POS_Y * 4, event_handler, ID_STEP_E0, 3, public_buf_l);
 
-      lv_big_button_create(scr, "F:/bmp_back70x40.bin", machine_menu.next, PARA_UI_TURN_PAGE_POS_X, PARA_UI_TURN_PAGE_POS_Y, event_handler, ID_STEP_DOWN, true);
-    }
-    else {
-      dtostrf(planner.settings.axis_steps_per_mm[E_AXIS_N(1)], 1, 1, public_buf_l);
-      lv_screen_menu_item_1_edit(scr, machine_menu.E1_Steps, PARA_UI_POS_X, PARA_UI_POS_Y, event_handler, ID_STEP_E1, 0, public_buf_l);
+    lv_big_button_create(scr, "F:/bmp_back70x40.bin", machine_menu.next, PARA_UI_TURN_PAGE_POS_X, PARA_UI_TURN_PAGE_POS_Y, event_handler, ID_STEP_DOWN, true);
+  }
+  else {
+    dtostrf(planner.settings.axis_steps_per_mm[E_AXIS_N(1)], 1, 1, public_buf_l);
+    lv_screen_menu_item_1_edit(scr, machine_menu.E1_Steps, PARA_UI_POS_X, PARA_UI_POS_Y, event_handler, ID_STEP_E1, 0, public_buf_l);
 
-      lv_big_button_create(scr, "F:/bmp_back70x40.bin", machine_menu.previous, PARA_UI_TURN_PAGE_POS_X, PARA_UI_TURN_PAGE_POS_Y, event_handler, ID_STEP_UP, true);
-    }
+    lv_big_button_create(scr, "F:/bmp_back70x40.bin", machine_menu.previous, PARA_UI_TURN_PAGE_POS_X, PARA_UI_TURN_PAGE_POS_Y, event_handler, ID_STEP_UP, true);
+  }
 
-    lv_big_button_create(scr, "F:/bmp_back70x40.bin", common_menu.text_back, PARA_UI_BACK_POS_X, PARA_UI_BACK_POS_Y, event_handler, ID_STEP_RETURN, true);
-  #else
-    int index = 0;
-
-    scr = lv_screen_create(STEPS_UI, MTR.ADVSetStep);
-
-    dtostrf(planner.settings.axis_steps_per_mm[X_AXIS], 1, 1, public_buf_l);
-    M_SCREEN_EDITITEM(MTR.ADVSetStepX, ID_STEP_X, index);
-    index++;
-
-    dtostrf(planner.settings.axis_steps_per_mm[Y_AXIS], 1, 1, public_buf_l);
-    M_SCREEN_EDITITEM(MTR.ADVSetStepY, ID_STEP_Y, index);
-    index++;
-
-    dtostrf(planner.settings.axis_steps_per_mm[Z_AXIS], 1, 1, public_buf_l);
-    M_SCREEN_EDITITEM(MTR.ADVSetStepZ, ID_STEP_Z, index);
-    index++;
-
-    dtostrf(planner.settings.axis_steps_per_mm[E_AXIS], 1, 1, public_buf_l);
-    M_SCREEN_EDITITEM(MTR.ADVSetStepE, ID_STEP_E0, index);
-    index++;
-
-    MUI.page_button_return(scr, event_handler, ID_STEP_RETURN);
-  #endif
+  lv_big_button_create(scr, "F:/bmp_back70x40.bin", common_menu.text_back, PARA_UI_BACK_POS_X, PARA_UI_BACK_POS_Y, event_handler, ID_STEP_RETURN, true);
 }
 
 void lv_clear_step_settings() {

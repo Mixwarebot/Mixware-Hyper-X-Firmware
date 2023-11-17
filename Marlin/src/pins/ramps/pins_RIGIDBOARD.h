@@ -23,6 +23,7 @@
 
 /**
  * RIGIDBOARD Arduino Mega with RAMPS v1.4 pin assignments
+ * ATmega2560, ATmega1280
  */
 
 #ifndef BOARD_INFO_NAME
@@ -51,8 +52,8 @@
 //
 // MOSFET changes
 //
-#define RAMPS_D9_PIN                           8  // FAN (by default)
-#define RAMPS_D10_PIN                          9  // EXTRUDER 1
+#define MOSFET_A_PIN                           9  // EXTRUDER 1
+#define MOSFET_B_PIN                           8  // FAN (by default)
 #define MOSFET_D_PIN                          12  // EXTRUDER 2 or FAN
 
 #include "pins_RAMPS.h"
@@ -103,9 +104,9 @@
 
   // Direction buttons
   #define BTN_UP                              37
-  #define BTN_DWN                             35
-  #define BTN_LFT                             33
-  #define BTN_RT                              32
+  #define BTN_DOWN                            35
+  #define BTN_LEFT                            33
+  #define BTN_RIGHT                           32
 
   // 'R' button
   #undef BTN_ENC

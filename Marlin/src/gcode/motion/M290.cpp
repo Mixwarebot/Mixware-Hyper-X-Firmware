@@ -41,17 +41,23 @@
 
   FORCE_INLINE void mod_probe_offset(const_float_t offs) {
     if (TERN1(BABYSTEP_HOTEND_Z_OFFSET, active_extruder == 0)) {
-      // probe.offset.z += offs;
-      // SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Z, probe.offset.z);
-        hotend_offset[active_extruder].z -= offs;
-        SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Z ": ", hotend_offset[active_extruder].z);
+      // #if ENABLED(MIXWARE_HYPER_X)
+      //   hotend_offset[active_extruder].z -= offs;
+      //   SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Z ": ", hotend_offset[active_extruder].z);
+      // #else
+        probe.offset.z += offs;
+        SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Z, probe.offset.z);
+      // #endif
     }
     else {
       #if ENABLED(BABYSTEP_HOTEND_Z_OFFSET)
-        // hotend_offset[active_extruder].z -= offs;
-        // SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Z ": ", hotend_offset[active_extruder].z);
-      probe.offset.z += offs;
-      SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Z, probe.offset.z);
+      // #if ENABLED(MIXWARE_HYPER_X)
+      //   probe.offset.z += offs;
+      //   SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Z, probe.offset.z);
+      // #else
+        hotend_offset[active_extruder].z -= offs;
+        SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Z ": ", hotend_offset[active_extruder].z);
+      // #endif
       #endif
     }
   }
@@ -73,38 +79,40 @@
  */
 void GcodeSuite::M290() {
   #if ENABLED(BABYSTEP_XY)
-    LOOP_LINEAR_AXES(a)
+    LOOP_NUM_AXES(a)
       if (parser.seenval(AXIS_CHAR(a)) || (a == Z_AXIS && parser.seenval('S'))) {
         const float offs = constrain(parser.value_axis_units((AxisEnum)a), -2, 2);
         babystep.add_mm((AxisEnum)a, offs);
-        if (a == X_AXIS) {
-          if (active_extruder == 0) {
-            // probe.offset.x += offs;
-            // SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_X, probe.offset.x);
-            hotend_offset[active_extruder].x -= offs;
-            SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_X ": ", hotend_offset[active_extruder].x);
+        #if ENABLED(MIXWARE_HYPER_X)
+          if (a == X_AXIS) {
+            if (active_extruder == 0) {
+              probe.offset.x += offs;
+              SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_X, probe.offset.x);
+              // hotend_offset[active_extruder].x -= offs;
+              // SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_X ": ", hotend_offset[active_extruder].x);
+            }
+            else {
+              hotend_offset[active_extruder].x -= offs;
+              SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_X ": ", hotend_offset[active_extruder].x);
+              // probe.offset.x += offs;
+              // SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_X, probe.offset.x);
+            }
           }
-          else {
-            // hotend_offset[active_extruder].x -= offs;
-            // SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_X ": ", hotend_offset[active_extruder].x);
-            probe.offset.x += offs;
-            SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_X, probe.offset.x);
+          else if (a == Y_AXIS) {
+            if (active_extruder == 0) {
+              probe.offset.y += offs;
+              SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Y, probe.offset.y);
+              // hotend_offset[active_extruder].y -= offs;
+              // SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Y ": ", hotend_offset[active_extruder].y);
+            }
+            else {
+              hotend_offset[active_extruder].y -= offs;
+              SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Y ": ", hotend_offset[active_extruder].y);
+              // probe.offset.y += offs;
+              // SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Y, probe.offset.y);
+            }
           }
-        }
-        else if (a == Y_AXIS) {
-          if (active_extruder == 0) {
-            // probe.offset.y += offs;
-            // SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Y, probe.offset.y);
-            hotend_offset[active_extruder].y -= offs;
-            SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Y ": ", hotend_offset[active_extruder].y);
-          }
-          else {
-            // hotend_offset[active_extruder].y -= offs;
-            // SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Y ": ", hotend_offset[active_extruder].y);
-            probe.offset.y += offs;
-            SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Y, probe.offset.y);
-          }
-        }
+        #endif
         #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
           if (a == Z_AXIS && parser.boolval('P', true)) mod_probe_offset(offs);
         #endif
@@ -119,7 +127,7 @@ void GcodeSuite::M290() {
     }
   #endif
 
-  if (!parser.seen(LINEAR_AXIS_GANG("X", "Y", "Z", AXIS4_STR, AXIS5_STR, AXIS6_STR)) || parser.seen('R')) {
+  if (!parser.seen(STR_AXES_MAIN) || parser.seen('R')) {
     SERIAL_ECHO_START();
 
     #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
@@ -143,7 +151,7 @@ void GcodeSuite::M290() {
     #endif
 
     #if ENABLED(MESH_BED_LEVELING)
-      SERIAL_ECHOLNPGM("MBL Adjust Z", mbl.z_offset);
+      SERIAL_ECHOLNPGM("MBL Adjust Z", bedlevel.z_offset);
     #endif
 
     #if ENABLED(BABYSTEP_DISPLAY_TOTAL)

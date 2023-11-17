@@ -23,6 +23,8 @@
 
 /**
  * Makerbase MKS SBASE pin assignments
+ * Schematic (V1.3): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/MKS%20SBASE%20V1.3/MKS%20SBASE%20V1.3_002%20SCH.pdf
+ * Origin (V1.3): http://green-candy.osdn.jp/external/MarlinFW/board_schematics/MKS%20SBASE%20V1.3/MKS%20SBASE%20V1.3_002%20SCH.pdf
  */
 
 #include "env_validate.h"
@@ -184,7 +186,7 @@
   #define SD_MISO_PIN                      P1_23  // J8-3 (moved from EXP2 P0.8)
   #define SD_MOSI_PIN                      P2_12  // J8-4 (moved from EXP2 P0.9)
   #define SD_SS_PIN                        P0_28
-  #define LPC_SOFTWARE_SPI                        // With a custom cable we need software SPI because the
+  #define SOFTWARE_SPI                            // With a custom cable we need software SPI because the
                                                   // selected pins are not on a hardware SPI controller
 #elif SD_CONNECTION_IS(LCD) || SD_CONNECTION_IS(ONBOARD)
   #define SD_SCK_PIN                       P0_07
@@ -238,7 +240,7 @@
   #define LCD_SDSS                         P0_28  // EXP2.4
   #define LCD_PINS_ENABLE                  P0_18  // EXP1.3
   #define LCD_PINS_D4                      P0_15  // EXP1.5
-  #if ANY(VIKI2, miniVIKI)
+  #if EITHER(VIKI2, miniVIKI)
     #define DOGLCD_SCK                SD_SCK_PIN
     #define DOGLCD_MOSI              SD_MOSI_PIN
   #endif
@@ -278,11 +280,7 @@
     #endif
 
   #elif ENABLED(MINIPANEL)
-    // GLCD features
-    // Uncomment screen orientation
-    //#define LCD_SCREEN_ROT_90
-    //#define LCD_SCREEN_ROT_180
-    //#define LCD_SCREEN_ROT_270
+    //#define LCD_SCREEN_ROTATE              180  // 0, 90, 180, 270
   #endif
 
 #endif // HAS_WIRED_LCD
@@ -363,9 +361,9 @@
  *  PWM1.4   P1_23   SDSS(SSEL0)      J3-5  AUX-3
  *  PWM1.4   P2_03   Z_STEP_PIN
  *  PWM1.5   P1_24   X_MIN_PIN        10K PULLUP TO 3.3v, 1K SERIES
- *  PWM1.5   P2_04   RAMPS_D9_PIN
+ *  PWM1.5   P2_04   MOSFET_B_PIN
  *  PWM1.6   P1_26   Y_MIN_PIN        10K PULLUP TO 3.3v, 1K SERIES
- *  PWM1.6   P2_05   RAMPS_D10_PIN
+ *  PWM1.6   P2_05   MOSFET_A_PIN
  */
 
 /**

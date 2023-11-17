@@ -33,10 +33,7 @@
 #include "../../../inc/MarlinConfig.h"
 
 extern lv_group_t *g;
-
-#ifndef USE_NEW_LVGL_CONF
 static lv_obj_t *scr;
-#endif
 
 enum {
   ID_H_ALL = 1,
@@ -49,98 +46,48 @@ enum {
 };
 
 static void event_handler(lv_obj_t *obj, lv_event_t event) {
-
-  bool is_rb_full = true;
-
-  if(!queue.ring_buffer.full(1)) {
-    is_rb_full = true;
-  }else{
-    is_rb_full = false;
-  }
-
-  if ((event == LV_EVENT_RELEASED) || (event == LV_EVENT_PRESS_LOST)) {
-
-    switch (obj->mks_obj_id) {
-      case ID_H_ALL:
-        queue.inject_P(G28_STR);
-        break;
-      case ID_H_X:
-        if(is_rb_full) {
-          queue.inject_P(PSTR("G28X"));
-        }
-        break;
-      case ID_H_Y:
-        if(is_rb_full) {
-          queue.inject_P(PSTR("G28Y"));
-        }
-        break;
-      case ID_H_Z:
-        if(is_rb_full) {
-          queue.inject_P(PSTR("G28Z"));
-        }
-        break;
-      case ID_H_OFF_ALL:
-        if(is_rb_full) {
-          queue.inject_P(PSTR("M84"));
-        }
-        break;
-      case ID_H_OFF_XY:
-        if(is_rb_full) {
-          queue.inject_P(PSTR("M84XY"));
-        }
-        break;
-      case ID_H_RETURN:
-        lv_clear_home();
-        lv_draw_tool();
-        break;
-    }
+  if (event != LV_EVENT_RELEASED) return;
+  switch (obj->mks_obj_id) {
+    case ID_H_ALL:
+      queue.inject_P(G28_STR);
+      break;
+    case ID_H_X:
+      queue.inject(F("G28X"));
+      break;
+    case ID_H_Y:
+      queue.inject(F("G28Y"));
+      break;
+    case ID_H_Z:
+      queue.inject(F("G28Z"));
+      break;
+    case ID_H_OFF_ALL:
+      queue.inject(F("M84"));
+      break;
+    case ID_H_OFF_XY:
+      queue.inject(F("M84XY"));
+      break;
+    case ID_H_RETURN:
+      goto_previous_ui();
+      break;
   }
 }
 
 void lv_draw_home() {
-
-#ifdef USE_NEW_LVGL_CONF
-  mks_ui.src_main = lv_set_scr_id_title(mks_ui.src_main, ZERO_UI, "");
-  lv_big_button_create(mks_ui.src_main, "F:/bmp_zeroAll.bin", home_menu.home_all, INTERVAL_V, titleHeight, event_handler, ID_H_ALL);
-  lv_big_button_create(mks_ui.src_main, "F:/bmp_zeroX.bin", home_menu.home_x, BTN_X_PIXEL + INTERVAL_V * 2, titleHeight, event_handler, ID_H_X);
-  lv_big_button_create(mks_ui.src_main, "F:/bmp_zeroY.bin", home_menu.home_y, BTN_X_PIXEL * 2 + INTERVAL_V * 3, titleHeight, event_handler, ID_H_Y);
-  lv_big_button_create(mks_ui.src_main, "F:/bmp_zeroZ.bin", home_menu.home_z, BTN_X_PIXEL * 3 + INTERVAL_V * 4, titleHeight, event_handler, ID_H_Z);
-  lv_big_button_create(mks_ui.src_main, "F:/bmp_function1.bin", set_menu.motoroff, INTERVAL_V, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_OFF_ALL);
-  lv_big_button_create(mks_ui.src_main, "F:/bmp_function1.bin", set_menu.motoroffXY, BTN_X_PIXEL + INTERVAL_V * 2, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_OFF_XY);
-  lv_big_button_create(mks_ui.src_main, "F:/bmp_return.bin", common_menu.text_back, BTN_X_PIXEL * 3 + INTERVAL_V * 4, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_RETURN);
-#else
   scr = lv_screen_create(ZERO_UI);
-  #if DISABLED(TFT_MIXWARE_LVGL_UI)
-    lv_big_button_create(scr, "F:/bmp_zeroAll.bin", home_menu.home_all, INTERVAL_V, titleHeight, event_handler, ID_H_ALL);
-    lv_big_button_create(scr, "F:/bmp_zeroX.bin", home_menu.home_x, BTN_X_PIXEL + INTERVAL_V * 2, titleHeight, event_handler, ID_H_X);
-    lv_big_button_create(scr, "F:/bmp_zeroY.bin", home_menu.home_y, BTN_X_PIXEL * 2 + INTERVAL_V * 3, titleHeight, event_handler, ID_H_Y);
-    lv_big_button_create(scr, "F:/bmp_zeroZ.bin", home_menu.home_z, BTN_X_PIXEL * 3 + INTERVAL_V * 4, titleHeight, event_handler, ID_H_Z);
-    lv_big_button_create(scr, "F:/bmp_function1.bin", set_menu.motoroff, INTERVAL_V, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_OFF_ALL);
-    lv_big_button_create(scr, "F:/bmp_function1.bin", set_menu.motoroffXY, BTN_X_PIXEL + INTERVAL_V * 2, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_OFF_XY);
-    lv_big_button_create(scr, "F:/bmp_return.bin", common_menu.text_back, BTN_X_PIXEL * 3 + INTERVAL_V * 4, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_RETURN);
-  #else
-    lv_big_button_create(scr, MIMG.homeAll,  MTR.homeAll, IMAGEBTN_P_X(0), IMAGEBTN_P_Y(0), event_handler, ID_H_ALL);
-    lv_big_button_create(scr, MIMG.homeX,    MTR.x,   IMAGEBTN_P_X(1), IMAGEBTN_P_Y(1), event_handler, ID_H_X);
-    lv_big_button_create(scr, MIMG.homeY,    MTR.y,   IMAGEBTN_P_X(2), IMAGEBTN_P_Y(2), event_handler, ID_H_Y);
-    lv_big_button_create(scr, MIMG.homeZ,    MTR.z,   IMAGEBTN_P_X(3), IMAGEBTN_P_Y(3), event_handler, ID_H_Z);
-    lv_big_button_create(scr, MIMG.motorOff, MTR.axisDisabled,  IMAGEBTN_P_X(4), IMAGEBTN_P_Y(4), event_handler, ID_H_OFF_ALL);
-    MUI.page_button_return(scr, event_handler, ID_H_RETURN);
-  #endif
-#endif
-
+  lv_big_button_create(scr, "F:/bmp_zeroAll.bin", home_menu.home_all, INTERVAL_V, titleHeight, event_handler, ID_H_ALL);
+  lv_big_button_create(scr, "F:/bmp_zeroX.bin", home_menu.home_x, BTN_X_PIXEL + INTERVAL_V * 2, titleHeight, event_handler, ID_H_X);
+  lv_big_button_create(scr, "F:/bmp_zeroY.bin", home_menu.home_y, BTN_X_PIXEL * 2 + INTERVAL_V * 3, titleHeight, event_handler, ID_H_Y);
+  lv_big_button_create(scr, "F:/bmp_zeroZ.bin", home_menu.home_z, BTN_X_PIXEL * 3 + INTERVAL_V * 4, titleHeight, event_handler, ID_H_Z);
+  lv_big_button_create(scr, "F:/bmp_function1.bin", set_menu.motoroff, INTERVAL_V, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_OFF_ALL);
+  lv_big_button_create(scr, "F:/bmp_function1.bin", set_menu.motoroffXY, BTN_X_PIXEL + INTERVAL_V * 2, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_OFF_XY);
+  lv_big_button_create(scr, "F:/bmp_return.bin", common_menu.text_back, BTN_X_PIXEL * 3 + INTERVAL_V * 4, BTN_Y_PIXEL + INTERVAL_H + titleHeight, event_handler, ID_H_RETURN);
 }
 
 void lv_clear_home() {
   #if HAS_ROTARY_ENCODER
     if (gCfgItems.encoder_enable) lv_group_remove_all_objs(g);
   #endif
-
-#ifdef USE_NEW_LVGL_CONF
-  lv_obj_clean(mks_ui.src_main);
-#else
   lv_obj_del(scr);
-#endif
-
 }
 
 #endif // HAS_TFT_LVGL_UI

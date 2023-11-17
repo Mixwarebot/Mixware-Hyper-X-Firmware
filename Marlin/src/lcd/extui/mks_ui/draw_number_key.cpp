@@ -45,10 +45,6 @@
   #include "../../../module/probe.h"
 #endif
 
-#if ENABLED(TFT_MIXWARE_LVGL_UI)
-  #include "../../../module/temperature.h"
-#endif
-
 extern lv_group_t *g;
 static lv_obj_t *scr;
 static lv_obj_t *buttonValue = nullptr;
@@ -123,22 +119,22 @@ static void disp_key_value() {
 
     case XJerk:
       #if HAS_CLASSIC_JERK
-        dtostrf(planner.max_jerk[X_AXIS], 1, 1, public_buf_m);
+        dtostrf(planner.max_jerk.x, 1, 1, public_buf_m);
       #endif
       break;
     case YJerk:
       #if HAS_CLASSIC_JERK
-        dtostrf(planner.max_jerk[Y_AXIS], 1, 1, public_buf_m);
+        dtostrf(planner.max_jerk.y, 1, 1, public_buf_m);
       #endif
       break;
     case ZJerk:
       #if HAS_CLASSIC_JERK
-        dtostrf(planner.max_jerk[Z_AXIS], 1, 1, public_buf_m);
+        dtostrf(planner.max_jerk.z, 1, 1, public_buf_m);
       #endif
       break;
     case EJerk:
       #if HAS_CLASSIC_JERK
-        dtostrf(planner.max_jerk[E_AXIS], 1, 1, public_buf_m);
+        dtostrf(planner.max_jerk.e, 1, 1, public_buf_m);
       #endif
       break;
 
@@ -285,11 +281,6 @@ static void disp_key_value() {
         itoa(TERN(Z2_SENSORLESS, stepperZ2.homing_threshold(), 0), public_buf_m, 10);
       #endif
       break;
-    #if ENABLED(TFT_MIXWARE_LVGL_UI)
-      case filament_temp_input:
-        itoa(thermalManager.temp_hotend[uiCfg.extruderIndex].target, public_buf_m, 10);
-        break;
-    #endif
   }
 
   strcpy(key_value, public_buf_m);
@@ -316,10 +307,10 @@ static void set_value_confirm() {
     case ZMaxFeedRate:   planner.settings.max_feedrate_mm_s[Z_AXIS] = atof(key_value); break;
     case E0MaxFeedRate:  planner.settings.max_feedrate_mm_s[E_AXIS] = atof(key_value); break;
     case E1MaxFeedRate:  planner.settings.max_feedrate_mm_s[E_AXIS_N(1)] = atof(key_value); break;
-    case XJerk: TERN_(HAS_CLASSIC_JERK, planner.max_jerk[X_AXIS] = atof(key_value)); break;
-    case YJerk: TERN_(HAS_CLASSIC_JERK, planner.max_jerk[Y_AXIS] = atof(key_value)); break;
-    case ZJerk: TERN_(HAS_CLASSIC_JERK, planner.max_jerk[Z_AXIS] = atof(key_value)); break;
-    case EJerk: TERN_(HAS_CLASSIC_JERK, planner.max_jerk[E_AXIS] = atof(key_value)); break;
+    case XJerk: TERN_(HAS_CLASSIC_JERK, planner.max_jerk.x = atof(key_value)); break;
+    case YJerk: TERN_(HAS_CLASSIC_JERK, planner.max_jerk.y = atof(key_value)); break;
+    case ZJerk: TERN_(HAS_CLASSIC_JERK, planner.max_jerk.z = atof(key_value)); break;
+    case EJerk: TERN_(HAS_CLASSIC_JERK, planner.max_jerk.e = atof(key_value)); break;
     case Xstep:  planner.settings.axis_steps_per_mm[X_AXIS] = atof(key_value); planner.refresh_positioning(); break;
     case Ystep:  planner.settings.axis_steps_per_mm[Y_AXIS] = atof(key_value); planner.refresh_positioning(); break;
     case Zstep:  planner.settings.axis_steps_per_mm[Z_AXIS] = atof(key_value); planner.refresh_positioning(); break;
@@ -396,12 +387,12 @@ static void set_value_confirm() {
       break;
     case unload_length:
       gCfgItems.filamentchange_unload_length = atoi(key_value);
-      uiCfg.filament_unloading_time = (uint32_t)((TERN_(TFT_MIXWARE_LVGL_UI, UNLOAD_PRELOAD_TIME+)gCfgItems.filamentchange_unload_length*60.0/gCfgItems.filamentchange_unload_speed)+0.5);
+      uiCfg.filament_unloading_time = (uint32_t)((gCfgItems.filamentchange_unload_length*60.0/gCfgItems.filamentchange_unload_speed)+0.5);
       update_spi_flash();
       break;
     case unload_speed:
       gCfgItems.filamentchange_unload_speed = atoi(key_value);
-      uiCfg.filament_unloading_time = (uint32_t)((TERN_(TFT_MIXWARE_LVGL_UI, UNLOAD_PRELOAD_TIME+)gCfgItems.filamentchange_unload_length*60.0/gCfgItems.filamentchange_unload_speed)+0.5);
+      uiCfg.filament_unloading_time = (uint32_t)((gCfgItems.filamentchange_unload_length*60.0/gCfgItems.filamentchange_unload_speed)+0.5);
       update_spi_flash();
       break;
     case filament_temp:
@@ -412,17 +403,8 @@ static void set_value_confirm() {
     case y_sensitivity: TERN_(Y_SENSORLESS, stepperY.homing_threshold(atoi(key_value))); break;
     case z_sensitivity: TERN_(Z_SENSORLESS, stepperZ.homing_threshold(atoi(key_value))); break;
     case z2_sensitivity: TERN_(Z2_SENSORLESS, stepperZ2.homing_threshold(atoi(key_value))); break;
-    #if ENABLED(TFT_MIXWARE_LVGL_UI)
-      case filament_temp_input:
-        int temper = atoi(key_value);
-        NOLESS(temper, 0);
-        NOMORE(temper, MUI.get_heating_mode_temperature());
-        gCfgItems.filament_limit_temp = thermalManager.temp_hotend[0].target = temper;
-        thermalManager.start_watching_hotend(uiCfg.extruderIndex);
-        break;
-    #endif
   }
-  gcode.process_subcommands_now_P(PSTR("M500"));
+  gcode.process_subcommands_now(F("M500"));
 }
 
 static void event_handler(lv_obj_t *obj, lv_event_t event) {
@@ -471,18 +453,7 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
     case ID_NUM_CONFIRM:
       last_disp_state = NUMBER_KEY_UI;
       if (strlen(key_value) != 0) set_value_confirm();
-      #if ENABLED(TFT_MIXWARE_LVGL_UI)
-        if (value == filament_temp_input) {
-          lv_clear_number_key();
-          if (uiCfg.filament_load_heat_flg)
-            lv_draw_dialog(DIALOG_TYPE_FILAMENT_LOAD_HEAT);
-          else if (uiCfg.filament_unload_heat_flg)
-            lv_draw_dialog(DIALOG_TYPE_FILAMENT_UNLOAD_HEAT);
-          break;
-        }
-      #endif
-      lv_clear_number_key();
-      draw_return_ui();
+      goto_previous_ui();
       break;
   }
 }
@@ -490,7 +461,6 @@ static void event_handler(lv_obj_t *obj, lv_event_t event) {
 void lv_draw_number_key() {
   scr = lv_screen_create(NUMBER_KEY_UI, "");
 
-  #if DISABLED(TFT_MIXWARE_LVGL_UI)
   buttonValue = lv_btn_create(scr, 92, 40, 296, 40, event_handler, ID_NUM_KEY1, &style_num_text);
   labelValue = lv_label_create_empty(buttonValue);
 
@@ -554,44 +524,6 @@ void lv_draw_number_key() {
       lv_group_add_obj(g, KeyPoint);
       lv_group_add_obj(g, KeyConfirm);
     }
-  #endif
-  #else
-    #define NO_KEY_INTERVAL                               3
-    #define NO_KEY_WIDTH                                  76
-    #define NO_KEY_HEIGHT                                 87
-    #define NO_KEY_HEIGHT2                                NO_KEY_HEIGHT * 2 + NO_KEY_INTERVAL
-    #define NO_KEY_P_X1                                   4
-    #define NO_KEY_P_X2                                   NO_KEY_INTERVAL + NO_KEY_WIDTH + NO_KEY_P_X1
-    #define NO_KEY_P_X3                                   NO_KEY_INTERVAL + NO_KEY_WIDTH + NO_KEY_P_X2
-    #define NO_KEY_P_X4                                   NO_KEY_INTERVAL + NO_KEY_WIDTH + NO_KEY_P_X3
-    #define NO_KEY_P_Y1                                   120
-    #define NO_KEY_P_Y2                                   NO_KEY_INTERVAL + NO_KEY_HEIGHT + NO_KEY_P_Y1
-    #define NO_KEY_P_Y3                                   NO_KEY_INTERVAL + NO_KEY_HEIGHT + NO_KEY_P_Y2
-    #define NO_KEY_P_Y4                                   NO_KEY_INTERVAL + NO_KEY_HEIGHT + NO_KEY_P_Y3
-    #define DRAW_NO_KEY(B, L, T, X, Y, H, ID)  do{\
-                                                            lv_obj_t *B = lv_btn_create(scr, X, Y, NO_KEY_WIDTH, H, event_handler, ID, &style_num_key_pre);\
-                                                            lv_obj_t *L = lv_label_create_empty(B);\
-                                                            lv_label_set_text(L, T);\
-                                                            lv_obj_align(L, B, LV_ALIGN_CENTER, 0, 0);\
-                                                          }while (0)
-
-    buttonValue = lv_btn_create(scr, 4, 3, 313, 114, event_handler, 0, &style_num_text);
-    labelValue = lv_label_create_empty(buttonValue);
-    DRAW_NO_KEY(NumberKey_1, labelKey_1,      MTR.key_1,        NO_KEY_P_X1, NO_KEY_P_Y3, NO_KEY_HEIGHT,  ID_NUM_KEY1);
-    DRAW_NO_KEY(NumberKey_2, labelKey_2,      MTR.key_2,        NO_KEY_P_X2, NO_KEY_P_Y3, NO_KEY_HEIGHT,  ID_NUM_KEY2);
-    DRAW_NO_KEY(NumberKey_3, labelKey_3,      MTR.key_3,        NO_KEY_P_X3, NO_KEY_P_Y3, NO_KEY_HEIGHT,  ID_NUM_KEY3);
-    DRAW_NO_KEY(NumberKey_4, labelKey_4,      MTR.key_4,        NO_KEY_P_X1, NO_KEY_P_Y2, NO_KEY_HEIGHT,  ID_NUM_KEY4);
-    DRAW_NO_KEY(NumberKey_5, labelKey_5,      MTR.key_5,        NO_KEY_P_X2, NO_KEY_P_Y2, NO_KEY_HEIGHT,  ID_NUM_KEY5);
-    DRAW_NO_KEY(NumberKey_6, labelKey_6,      MTR.key_6,        NO_KEY_P_X3, NO_KEY_P_Y2, NO_KEY_HEIGHT,  ID_NUM_KEY6);
-    DRAW_NO_KEY(NumberKey_7, labelKey_7,      MTR.key_7,        NO_KEY_P_X1, NO_KEY_P_Y1, NO_KEY_HEIGHT,  ID_NUM_KEY7);
-    DRAW_NO_KEY(NumberKey_8, labelKey_8,      MTR.key_8,        NO_KEY_P_X2, NO_KEY_P_Y1, NO_KEY_HEIGHT,  ID_NUM_KEY8);
-    DRAW_NO_KEY(NumberKey_9, labelKey_9,      MTR.key_9,        NO_KEY_P_X3, NO_KEY_P_Y1, NO_KEY_HEIGHT,  ID_NUM_KEY9);
-    DRAW_NO_KEY(NumberKey_0, labelKey_0,      MTR.key_0,        NO_KEY_P_X2, NO_KEY_P_Y4, NO_KEY_HEIGHT,  ID_NUM_KEY0);
-    DRAW_NO_KEY(KeyBack,     labelKeyBack,    MTR.key_back,     NO_KEY_P_X4, NO_KEY_P_Y1, NO_KEY_HEIGHT,  ID_NUM_BACK);
-    DRAW_NO_KEY(KeyReset,    labelKeyReset,   MTR.key_reset,    NO_KEY_P_X4, NO_KEY_P_Y2, NO_KEY_HEIGHT,  ID_NUM_RESET);
-    DRAW_NO_KEY(KeyConfirm,  labelKeyConfirm, MTR.key_confirm,  NO_KEY_P_X4, NO_KEY_P_Y3, NO_KEY_HEIGHT2, ID_NUM_CONFIRM);
-    DRAW_NO_KEY(KeyPoint,    labelKeyPoint,   MTR.key_point,    NO_KEY_P_X3, NO_KEY_P_Y4, NO_KEY_HEIGHT,  ID_NUM_POINT);
-    DRAW_NO_KEY(Minus,       labelMinus,      MTR.key_negative, NO_KEY_P_X1, NO_KEY_P_Y4, NO_KEY_HEIGHT,  ID_NUM_NEGATIVE);
   #endif
 
   disp_key_value();

@@ -58,13 +58,8 @@
 #define LOGO_MAX_SIZE_TFT35             (300 * 1024)
 #define LOGO_MAX_SIZE_TFT32             (150 * 1024)
 #define TITLELOGO_MAX_SIZE              (150 * 1024) // Little logo maximum
-#if DISABLED(TFT_MIXWARE_LVGL_UI)
-  #define DEFAULT_VIEW_MAX_SIZE           (200 * 200 * 2)
-  #define FLASH_VIEW_MAX_SIZE             (200 * 200 * 2)
-#else
-  #define DEFAULT_VIEW_MAX_SIZE           (160 * 200 * 2)
-  #define FLASH_VIEW_MAX_SIZE             (160 * 200 * 2)
-#endif
+#define DEFAULT_VIEW_MAX_SIZE           (200 * 200 * 2)
+#define FLASH_VIEW_MAX_SIZE             (200 * 200 * 2)
 
 #define PER_PIC_MAX_SPACE_TFT35         (9 * 1024)
 #define PER_PIC_MAX_SPACE_TFT32         (16 * 1024)
@@ -125,9 +120,9 @@
 
 // SD card information first addr
 #define VAR_INF_ADDR                    0x000000
-#define FLASH_INF_VALID_FLAG            0x20220715
+#define FLASH_INF_VALID_FLAG            0x20201118
 
-// Store some gcode commands, such as auto leveling commands
+// Store some G-code commands, such as auto-leveling commands
 #define GCODE_COMMAND_ADDR              VAR_INF_ADDR + 3 * 1024
 #define AUTO_LEVELING_COMMAND_ADDR      GCODE_COMMAND_ADDR
 #define OTHERS_COMMAND_ADDR_1           AUTO_LEVELING_COMMAND_ADDR + 100
@@ -136,7 +131,7 @@
 #define OTHERS_COMMAND_ADDR_4           OTHERS_COMMAND_ADDR_3 + 100
 
 #ifdef __cplusplus
-  extern "C" { /* C-declarations for C++ */
+  extern "C" {
 #endif
 
 union union32 {
