@@ -52,6 +52,7 @@ void GcodeSuite::M412() {
     #endif
   }
   else {
+    M412_report(false);
     SERIAL_ECHO_START();
     SERIAL_ECHOPGM("Filament runout ");
     serialprint_onoff(runout.enabled);

@@ -128,12 +128,13 @@ void event_filament_runout(const uint8_t extruder) {
 
   if (run_runout_script) {
     #if MULTI_FILAMENT_SENSOR
-      char script[strlen(FILAMENT_RUNOUT_SCRIPT) + 1];
-      sprintf_P(script, PSTR(FILAMENT_RUNOUT_SCRIPT), tool);
+      // char script[strlen(FILAMENT_RUNOUT_SCRIPT) + 1];
+      // sprintf_P(script, PSTR(FILAMENT_RUNOUT_SCRIPT), tool);
+      SERIAL_ECHOPGM("D412 B1 S", runout.enabled, " T", extruder);
       #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
         SERIAL_ECHOLNPGM("Runout Command: ", script);
       #endif
-      queue.inject(script);
+      // queue.inject(script);
     #else
       #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
         SERIAL_ECHOPGM("Runout Command: ");

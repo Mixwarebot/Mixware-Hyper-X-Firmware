@@ -28,7 +28,7 @@
 /**
  * Marlin release version identifier
  */
-#define SHORT_BUILD_VERSION "2.1.2.1.017"
+//#define SHORT_BUILD_VERSION "2.1.2.1"
 
 /**
  * Verbose version identifier which should contain a reference to the location
@@ -50,8 +50,8 @@
 
 /**
  * The SOURCE_CODE_URL is the location where users will find the Marlin Source
- * Code which is installed on the device. In most cases â€”unless the manufacturer
- * has a distinct Github forkâ€? the Source Code URL should just be the main
+ * Code which is installed on the device. In most cases ¡ªunless the manufacturer
+ * has a distinct Github fork¡ª the Source Code URL should just be the main
  * Marlin repository.
  */
 //#define SOURCE_CODE_URL "github.com/MarlinFirmware/Marlin"

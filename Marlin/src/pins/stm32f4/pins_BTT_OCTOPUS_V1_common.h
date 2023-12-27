@@ -42,7 +42,7 @@
 //
 // Servos
 //
-#define SERVO0_PIN                          PB6
+// #define SERVO0_PIN                          PB6
 
 //
 // Misc. Functions
@@ -145,7 +145,7 @@
 //
 // Filament Runout Sensor
 //
-#define FIL_RUNOUT_PIN                      PG12  // E0DET
+#define FIL_RUNOUT_PIN                      PB6  // E0DET
 #define FIL_RUNOUT2_PIN                     PG13  // E1DET
 // #define FIL_RUNOUT3_PIN                     PG14  // E2DET
 // #define FIL_RUNOUT4_PIN                     PG15  // E3DET

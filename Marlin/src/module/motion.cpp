@@ -2360,9 +2360,11 @@ void set_axis_is_at_home(const AxisEnum axis) {
   #if ENABLED(MIXWARE_HYPER_X)
     if (active_extruder == 0) {
       if (axis == X_AXIS) current_position.x -= probe.offset.x;
-      if (axis == Y_AXIS) current_position.y -= probe.offset.y;
     }
-    if (axis == Z_AXIS) current_position.z -= probe.offset.z;
+    if (axis == Y_AXIS) current_position.y -= probe.offset.y;
+    if (axis == Z_AXIS) {
+      current_position.z -= probe.offset.z;
+    }
   #endif
 
   TERN_(I2C_POSITION_ENCODERS, I2CPEM.homed(axis));
