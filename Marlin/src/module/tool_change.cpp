@@ -1265,6 +1265,11 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
       #endif
 
       #if ENABLED(DUAL_X_CARRIAGE)
+        #if ENABLED(MIXWARE_HYPER_X)
+          // do_blocking_move_to_x(ox, MMM_TO_MMS(XY_PROBE_FEEDRATE));
+          // planner.synchronize();
+          set_bed_leveling_enabled(false);
+        #endif
         dualx_tool_change(new_tool, no_move);
       #elif ENABLED(PARKING_EXTRUDER)                                   // Dual Parking extruder
         parking_extruder_tool_change(new_tool, no_move);
@@ -1354,6 +1359,7 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
               if (toolchange_settings.enable_park) do_blocking_move_to_xy_z(destination, destination.z, MMM_TO_MMS(TOOLCHANGE_PARK_XY_FEEDRATE));
             #else
               #if ENABLED(MIXWARE_HYPER_X)
+                set_bed_leveling_enabled(true);
                 do_blocking_move_to_z(destination.z, planner.settings.max_feedrate_mm_s[Z_AXIS]);
               #else
                 do_blocking_move_to_xy(destination, planner.settings.max_feedrate_mm_s[X_AXIS]);
