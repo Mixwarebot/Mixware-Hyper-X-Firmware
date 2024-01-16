@@ -528,22 +528,45 @@ void GCodeQueue::get_serial_commands() {
             case '2': if (command[2] == '1' && command[1] == '1') kill(FPSTR(M112_KILL_STR), nullptr, true); break;
             case '0': if (command[1] == '4' && command[2] == '1') quickstop_stepper(); break;
           }
-          if (command[0] == 'D') {
-            if (command[1] == '2' && command[2] == '5') {
-              wait_for_heatup = false;
-              queue.clear();
-              quickstop_stepper();
-              IF_DISABLED(SD_ABORT_NO_COOLDOWN, thermalManager.disable_all_heaters());
-              TERN(HAS_CUTTER, cutter.kill(), thermalManager.zero_fan_speeds()); // Full cutter shutdown including ISR control
-              #ifdef EVENT_GCODE_SD_ABORT
-                queue.inject(F(EVENT_GCODE_SD_ABORT));
-              #endif
-              break;
-             }
-             else if (command[1] == '0') {
-              hal.reboot();
-             }
-          }
+
+          #if ENABLED(MIXWARE_HYPER_X)
+            if (wait_for_heatup && command[0] == 'M') {
+              if ((command[1] == '1' && command[2] == '0' && command[3] == '4')
+              || (command[1] == '1' && command[2] == '0' && command[3] == '6')
+              || (command[1] == '1' && command[2] == '0' && command[3] == '7')
+              || (command[1] == '1' && command[2] == '4' && command[3] == '0')
+              || (command[1] == '2' && command[2] == '2' && command[3] == '0')
+              || (command[1] == '2' && command[2] == '2' && command[3] == '1')
+              || (command[1] == '3' && command[2] == '5' && command[3] == '5')
+              ) {
+                parser.parse(command);
+                gcode.process_parsed_command();
+                return;
+              }
+            }
+            else if (command[0] == 'D') {
+              if (command[1] == '2' && command[2] == '5') {
+                wait_for_heatup = false;
+                queue.clear();
+                quickstop_stepper();
+                IF_DISABLED(SD_ABORT_NO_COOLDOWN, thermalManager.disable_all_heaters());
+                TERN(HAS_CUTTER, cutter.kill(), thermalManager.zero_fan_speeds()); // Full cutter shutdown including ISR control
+                #ifdef EVENT_GCODE_SD_ABORT
+                  queue.inject(F(EVENT_GCODE_SD_ABORT));
+                #endif
+                break;
+              }
+              else if (command[1] == '0') {
+                hal.reboot();
+                return;
+              }
+              else if (command[1] == '1' && command[2] == '0' && command[3] == '8') {
+                wait_for_heatup = false;
+                IF_DISABLED(SD_ABORT_NO_COOLDOWN, thermalManager.disable_all_heaters());
+                TERN(HAS_CUTTER, cutter.kill(), thermalManager.zero_fan_speeds()); // Full cutter shutdown including ISR control
+              }
+            }
+          #endif
         #endif
 
         #if NO_TIMEOUTS > 0
