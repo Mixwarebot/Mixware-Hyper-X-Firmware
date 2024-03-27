@@ -1250,6 +1250,9 @@ private:
 
   static void T(const int8_t tool_index);
 
+  #if ENABLED(MIXWARE_HYPER_X)
+    static void D28_report();
+  #endif
 };
 
 extern GcodeSuite gcode;

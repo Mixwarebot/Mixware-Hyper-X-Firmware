@@ -315,14 +315,7 @@ void GcodeSuite::D(const int16_t dcode) {
           queue.inject(F(EVENT_GCODE_SD_ABORT));
         #endif
         break;
-      case 28:
-        SERIAL_ECHO_START();
-        SERIAL_ECHOPGM(" D28");
-        SERIAL_ECHOPGM_P(" X", axis_is_trusted(X_AXIS));
-        SERIAL_ECHOPGM_P(" Y", axis_is_trusted(Y_AXIS));
-        SERIAL_ECHOPGM_P(" Z", axis_is_trusted(Z_AXIS));
-        SERIAL_EOL();
-        break;
+      case 28: D28_report(); break;
 
       case 105:
         SERIAL_ECHO_START();
@@ -338,4 +331,14 @@ void GcodeSuite::D(const int16_t dcode) {
   }
 }
 
+#if ENABLED(MIXWARE_HYPER_X)
+  void GcodeSuite::D28_report() {
+    SERIAL_ECHOPGM(STR_OK);
+    SERIAL_ECHOPGM(" D28");
+    SERIAL_ECHOPGM(" X", axis_is_trusted(X_AXIS));
+    SERIAL_ECHOPGM(" Y", axis_is_trusted(Y_AXIS));
+    SERIAL_ECHOPGM(" Z", axis_is_trusted(Z_AXIS));
+    SERIAL_EOL();
+  }
+#endif
 #endif // MARLIN_DEV_MODE
