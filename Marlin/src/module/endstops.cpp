@@ -58,7 +58,7 @@ Endstops endstops;
 
 // private:
 
-bool Endstops::enabled, Endstops::enabled_globally; // Initialized by settings.load()
+bool Endstops::enabled, Endstops::enabled_globally, Endstops::enabled_xy_probe_target; // Initialized by settings.load()
 
 volatile Endstops::endstop_mask_t Endstops::hit_state;
 Endstops::endstop_mask_t Endstops::live_state = 0;
@@ -419,6 +419,7 @@ void Endstops::init() {
 
   // Enable endstops
   enable_globally(ENABLED(ENDSTOPS_ALWAYS_ON_DEFAULT));
+  enabled_xy_probe_target = enabled;
 
 } // Endstops::init
 
@@ -442,6 +443,10 @@ void Endstops::enable_globally(const bool onoff) {
 // Enable / disable endstop checking
 void Endstops::enable(const bool onoff) {
   enabled = onoff;
+  resync();
+}
+void Endstops::enable_xy_probe_target(const bool onoff) {
+  enabled_xy_probe_target = enabled_globally = enabled = onoff;
   resync();
 }
 
@@ -749,6 +754,8 @@ void Endstops::update() {
    */
   #if HAS_X_MIN && !X_SPI_SENSORLESS
     UPDATE_ENDSTOP_BIT(X, MIN);
+    if (xy_probe_target_enabled())
+      SET_BIT_TO(live_state, _ENDSTOP(X, MIN), (READ_ENDSTOP(_ENDSTOP_PIN(Y, MIN)) != _ENDSTOP_INVERTING(Y, MIN)));
     #if ENABLED(X_DUAL_ENDSTOPS)
       #if HAS_X2_MIN
         UPDATE_ENDSTOP_BIT(X2, MIN);
@@ -770,7 +777,7 @@ void Endstops::update() {
   #endif
 
   #if HAS_Y_MIN && !Y_SPI_SENSORLESS
-    UPDATE_ENDSTOP_BIT(Y, MIN);
+    if (xy_probe_target_enabled()) UPDATE_ENDSTOP_BIT(Y, MIN);
     #if ENABLED(Y_DUAL_ENDSTOPS)
       #if HAS_Y2_MIN
         UPDATE_ENDSTOP_BIT(Y2, MIN);
@@ -1111,7 +1118,8 @@ void Endstops::update() {
       G38_did_trigger = true;
       #define _G38_SET(Q) | (stepper.axis_is_moving(_AXIS(Q)) << _AXIS(Q))
       #define _G38_RESP(Q) if (moving[_AXIS(Q)]) { _ENDSTOP_HIT(Q, ENDSTOP); planner.endstop_triggered(_AXIS(Q)); }
-      const Flags<NUM_AXES> moving = { value_t(NUM_AXES)(0 MAIN_AXIS_MAP(_G38_SET)) };
+      #define uvalue_t(V) typename IF<((V)>65535), uint32_t, typename IF<((V)>255), uint16_t, uint8_t>::type>::type
+      const Flags<NUM_AXES> moving = { uvalue_t(NUM_AXES)(0 MAIN_AXIS_MAP(_G38_SET)) };
       MAIN_AXIS_MAP(_G38_RESP);
     }
   #endif
@@ -1122,6 +1130,7 @@ void Endstops::update() {
     if (stepper.motor_direction(X_AXIS_HEAD)) { // -direction
       #if HAS_X_MIN || (X_SPI_SENSORLESS && X_HOME_TO_MIN)
         PROCESS_ENDSTOP_X(MIN);
+        if (xy_probe_target_enabled()) PROCESS_ENDSTOP(X, MIN);
         #if   CORE_DIAG(XY, Y, MIN)
           PROCESS_CORE_ENDSTOP(Y,MIN,X,MIN);
         #elif CORE_DIAG(XY, Y, MAX)

@@ -41,23 +41,13 @@
 
   FORCE_INLINE void mod_probe_offset(const_float_t offs) {
     if (TERN1(BABYSTEP_HOTEND_Z_OFFSET, active_extruder == 0)) {
-      // #if ENABLED(MIXWARE_HYPER_X)
-      //   hotend_offset[active_extruder].z -= offs;
-      //   SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Z ": ", hotend_offset[active_extruder].z);
-      // #else
-        probe.offset.z += offs;
-        SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Z, probe.offset.z);
-      // #endif
+      probe.offset.z += offs;
+      SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Z, probe.offset.z);
     }
     else {
       #if ENABLED(BABYSTEP_HOTEND_Z_OFFSET)
-      // #if ENABLED(MIXWARE_HYPER_X)
-      //   probe.offset.z += offs;
-      //   SERIAL_ECHO_MSG(STR_PROBE_OFFSET " " STR_Z, probe.offset.z);
-      // #else
         hotend_offset[active_extruder].z -= offs;
         SERIAL_ECHO_MSG(STR_PROBE_OFFSET STR_Z ": ", hotend_offset[active_extruder].z);
-      // #endif
       #endif
     }
   }

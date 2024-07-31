@@ -287,7 +287,7 @@ G29_TYPE GcodeSuite::G29() {
         if (active_extruder != 1) tool_change(1, true);
       #else
       if (active_extruder != 0) tool_change(0, true);
-      #endif
+    #endif
     #endif
 
     #if EITHER(PROBE_MANUALLY, AUTO_BED_LEVELING_LINEAR)
@@ -397,7 +397,6 @@ G29_TYPE GcodeSuite::G29() {
 
       xy_probe_feedrate_mm_s = MMM_TO_MMS(parser.linearval('S', XY_PROBE_FEEDRATE));
 
-      // const float x_min = TERN(MIXWARE_HYPER_X, X2_MIN_POS + PROBING_MARGIN, probe.min_x()), x_max = TERN(MIXWARE_HYPER_X, X2_MAX_POS - PROBING_MARGIN, probe.max_x()),
       const float x_min = probe.min_x(), x_max = probe.max_x(),
                   y_min = probe.min_y(), y_max = probe.max_y();
 

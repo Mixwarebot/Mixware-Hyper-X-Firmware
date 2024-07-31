@@ -383,10 +383,10 @@ xyze_int8_t Stepper::count_direction{0};
       else if (last_moved_extruder) X2_DIR_WRITE((v) ^ ENABLED(INVERT_X2_VS_X_DIR)); else X_DIR_WRITE(v); \
     }while(0)
   #else
-    #define X_APPLY_DIR(v,ALWAYS) do{ \
-      if (extruder_duplication_enabled || ALWAYS) { X_DIR_WRITE(v); X2_DIR_WRITE((v) ^ idex_mirrored_mode); } \
-      else if (last_moved_extruder) X2_DIR_WRITE(v); else X_DIR_WRITE(v); \
-    }while(0)
+  #define X_APPLY_DIR(v,ALWAYS) do{ \
+    if (extruder_duplication_enabled || ALWAYS) { X_DIR_WRITE(v); X2_DIR_WRITE((v) ^ idex_mirrored_mode); } \
+    else if (last_moved_extruder) X2_DIR_WRITE(v); else X_DIR_WRITE(v); \
+  }while(0)
   #endif
   #define X_APPLY_STEP(v,ALWAYS) do{ \
     if (extruder_duplication_enabled || ALWAYS) { X_STEP_WRITE(v); X2_STEP_WRITE(v); } \
@@ -2494,7 +2494,7 @@ uint32_t Stepper::block_phase_isr() {
       #if ENABLED(MIXWARE_HYPER_X)
         if (current_block->steps.e) SBI(axis_bits, E_AXIS);
       #else
-      /if (current_block->steps.e) SBI(axis_bits, E_AXIS);
+      //if (current_block->steps.e) SBI(axis_bits, E_AXIS);
       #endif
       //if (current_block->steps.a) SBI(axis_bits, X_HEAD);
       //if (current_block->steps.b) SBI(axis_bits, Y_HEAD);

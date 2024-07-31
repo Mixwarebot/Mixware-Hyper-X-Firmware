@@ -453,7 +453,7 @@ inline void manage_inactivity(const bool no_stepper_sleep=false) {
           TERN_(DISABLE_INACTIVE_E, stepper.disable_e_steppers());
 
           TERN_(AUTO_BED_LEVELING_UBL, bedlevel.steppers_were_disabled());
-          TERN_(MIXWARE_HYPER_X, queue.inject_P(PSTR("D28")););
+          TERN_(MIXWARE_HYPER_X, queue.inject_P(PSTR("D28")));
         }
       }
       else
@@ -956,8 +956,8 @@ void minkill(const bool steppers_off/*=false*/) {
 
   #else
 
-    hal.reboot();
-    // for (;;) hal.watchdog_refresh();  // Wait for RESET button or power-cycle
+    TERN_(MIXWARE_HYPER_X, hal.reboot());
+    for (;;) hal.watchdog_refresh();  // Wait for RESET button or power-cycle
 
   #endif
 }

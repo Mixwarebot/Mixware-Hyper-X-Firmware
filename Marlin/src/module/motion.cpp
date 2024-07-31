@@ -1325,7 +1325,6 @@ FORCE_INLINE void segment_idle(millis_t &next_idle_ms) {
               current_position = destination;
               NOLESS(raised_parked_position.z, destination.z);
               delayed_move_time = millis() + 1000UL;
-              SERIAL_ECHOPGM(" This is a travel move (with no extrusion)");
               return true;
             }
           }
@@ -1338,11 +1337,9 @@ FORCE_INLINE void segment_idle(millis_t &next_idle_ms) {
           if (planner.buffer_line(raised, fr_zfast)) {
             //  2. Move to the current native XY and raised Z. Presumably this is a null move.
             xyze_pos_t curpos = current_position; curpos.z = raised_parked_position.z;
-              SERIAL_ECHOPGM("Move to the current native XY and raised Z. Presumably this is a null move.");
             if (planner.buffer_line(curpos, homing_feedrate(X_AXIS))) {
               //  3. Lower Z back down
               line_to_current_position(fr_zfast);
-              SERIAL_ECHOPGM(" Lower Z back down");
             }
           }
           stepper.set_directions();

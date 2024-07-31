@@ -518,7 +518,7 @@ void GcodeSuite::G28() {
     #endif
 
     // Consider the active extruder to be in its "parked" position
-    idex_set_parked();
+    TERN_(MIXWARE_HYPER_X, idex_set_parked());
 
     sync_plan_position();
 

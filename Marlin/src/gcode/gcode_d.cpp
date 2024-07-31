@@ -33,6 +33,7 @@
 #include "../module/settings.h"
 #include "../module/motion.h"
 #include "../module/temperature.h"
+#include "../module/endstops.h"
 #include "../libs/hex_print.h"
 #include "../HAL/shared/eeprom_if.h"
 #include "../HAL/shared/Delay.h"
@@ -326,6 +327,14 @@ void GcodeSuite::D(const int16_t dcode) {
 
       case 106:
         thermalManager.print_fan_speed();
+        break;
+
+      case 120:
+        endstops.enable_xy_probe_target(true);
+        break;
+
+      case 121:
+        endstops.enable_xy_probe_target(false);
         break;
     #endif
   }

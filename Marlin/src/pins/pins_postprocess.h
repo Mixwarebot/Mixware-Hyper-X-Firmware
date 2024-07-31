@@ -1870,7 +1870,7 @@
 #endif
 
 #if DISABLED(X_DUAL_ENDSTOPS) || X_HOME_TO_MAX
-  #undef X2_MIN_PIN
+  // #undef X2_MIN_PIN
 #endif
 #if DISABLED(X_DUAL_ENDSTOPS) || X_HOME_TO_MIN
   #undef X2_MAX_PIN

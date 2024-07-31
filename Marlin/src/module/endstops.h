@@ -134,7 +134,7 @@ class Endstops {
     #endif
 
   private:
-    static bool enabled, enabled_globally;
+    static bool enabled, enabled_globally, enabled_xy_probe_target;
     static endstop_mask_t live_state;
     static volatile endstop_mask_t hit_state; // Use X_MIN, Y_MIN, Z_MIN and Z_MIN_PROBE as BIT index
 
@@ -159,6 +159,7 @@ class Endstops {
     }
 
     static bool global_enabled() { return enabled_globally; }
+    static bool xy_probe_target_enabled() { return enabled_xy_probe_target; }
 
     /**
      * Periodic call to poll endstops if required. Called from temperature ISR
@@ -218,6 +219,7 @@ class Endstops {
 
     // Enable / disable endstop checking
     static void enable(const bool onoff=true);
+    static void enable_xy_probe_target(const bool onoff=true);
 
     // Disable / Enable endstops based on ENSTOPS_ONLY_FOR_HOMING and global enable
     static void not_homing();

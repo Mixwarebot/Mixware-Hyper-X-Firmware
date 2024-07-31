@@ -862,7 +862,7 @@ void fast_line_to_current(const AxisEnum fr_axis) { _line_to_current(fr_axis, 0.
       #if ENABLED(MIXWARE_HYPER_X)
         line_to_current_position(MMM_TO_MMS(XY_PROBE_FEEDRATE));   // Park the current head
       #else
-        line_to_current_position(planner.settings.max_feedrate_mm_s[X_AXIS]);   // Park the current head
+      line_to_current_position(planner.settings.max_feedrate_mm_s[X_AXIS]);   // Park the current head
       #endif
 
       planner.synchronize();
@@ -1266,8 +1266,6 @@ void tool_change(const uint8_t new_tool, bool no_move/*=false*/) {
 
       #if ENABLED(DUAL_X_CARRIAGE)
         #if ENABLED(MIXWARE_HYPER_X)
-          // do_blocking_move_to_x(ox, MMM_TO_MMS(XY_PROBE_FEEDRATE));
-          // planner.synchronize();
           set_bed_leveling_enabled(false);
         #endif
         dualx_tool_change(new_tool, no_move);

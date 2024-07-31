@@ -238,21 +238,12 @@
 #define HEATER_BED_PIN                      PA1   // Hotbed
 #define HEATER_0_PIN                        PA2   // Heater0
 #define HEATER_1_PIN                        PA3   // Heater1
-#define HEATER_CHAMBER_PIN                  PB10
 
 #define FAN_PIN                             PD12   // Fan0
 #define FAN1_PIN                            PD13   // Fan1
 #define FAN2_PIN                            PD15   // Fan2 //AIR
 #define FAN3_PIN                            PE11   // Fan4 //AIR
 // #define FAN5_PIN                            PF7  // Fan5
-
-#define AUTO_FAN_PIN                        PA8
-#define AUTO_FAN1_PIN                       PE5
-#define AUTO_FAN2_PIN                       PE12
-
-#define BORAD_FAN_PIN                       PD14
-
-#define CASE_LIGHT_PIN                      PB11
 
 //
 // SD Support

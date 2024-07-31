@@ -1078,7 +1078,7 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
       #endif
 
       #if ENABLED(SDSUPPORT)
-        // case 1001: M1001(); break;                                // M1001: [INTERNAL] Handle SD completion
+        case 1001: M1001(); break;                                // M1001: [INTERNAL] Handle SD completion
       #endif
 
       #if ENABLED(DGUS_LCD_UI_MKS)
