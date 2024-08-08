@@ -170,7 +170,7 @@
 #endif
 
 /**
- * Thermocouple Options â€” for MAX6675 (-2), MAX31855 (-3), and MAX31865 (-5).
+ * Thermocouple Options â€? for MAX6675 (-2), MAX31855 (-3), and MAX31865 (-5).
  */
 //#define TEMP_SENSOR_FORCE_HW_SPI                // Ignore SCK/MOSI/MISO pins; use CS and the default SPI bus.
 //#define MAX31865_SENSOR_WIRES_0 2               // (2-4) Number of wires for the probe connected to a MAX31865 board.
@@ -1265,22 +1265,22 @@
 #endif
 
 /**
- * XY PROBE OFFSETS CALIBRATION
+ * XY OFFSETS CALIBRATION
  * G429
  */
-#define XY_PROBE_OFFSETS_CALIBRATION
-#if ENABLED(XY_PROBE_OFFSETS_CALIBRATION)
+#define XY_OFFSETS_CALIBRATION
+#if ENABLED(XY_OFFSETS_CALIBRATION)
+  #define XYOC_FEEDRATE_SLOW           300    // mm/min
+  #define XYOC_FEEDRATE_FAST          1200    // mm/min
+  #define XYOC_FEEDRATE_TRAVEL        6000    // mm/min
 
-  #define XYPOC_TOTAL_PROBING              1
-
-  #define XYPOC_FEEDRATE_SLOW            120    // mm/min
-  #define XYPOC_FEEDRATE_FAST           1200    // mm/min
-  #define XYPOC_FEEDRATE_TRAVEL         6000    // mm/min
-
-  #define XYPOC_START_X                  {190,   0, 45}
-  #define XYPOC_START_Y                  {190, 130, 45}
-  #define XYPOC_PROBE_CLEARANCE          90
-  #define XYPOC_PROBE_HEIGHT             22
+  #define XYOC_START_POS_X            {210,  0, 57}
+  #define XYOC_START_POS_Y            {190, 85, 57}
+  #define XYOC_PROBE_CLEARANCE        (80)
+  #define XYOC_PROBE_HEIGHT           (22)
+  #define XYOC_SAFETY_GAP             (2)
+  #define XYOC_NOZZLE_WIDTH           (13 + XYOC_SAFETY_GAP * 2) // 12.5mm
+  #define XYOC_WIDTH                  (26 + XYOC_SAFETY_GAP * 2) // 26mm
 #endif
 
 /**

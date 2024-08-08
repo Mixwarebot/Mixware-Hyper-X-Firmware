@@ -328,14 +328,6 @@ void GcodeSuite::D(const int16_t dcode) {
       case 106:
         thermalManager.print_fan_speed();
         break;
-
-      case 120:
-        endstops.enable_xy_probe_target(true);
-        break;
-
-      case 121:
-        endstops.enable_xy_probe_target(false);
-        break;
     #endif
   }
 }

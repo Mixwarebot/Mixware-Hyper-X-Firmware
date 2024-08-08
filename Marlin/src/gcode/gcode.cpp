@@ -471,6 +471,10 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 425: G425(); break;                                  // G425: Perform calibration with calibration cube
       #endif
 
+      #if ENABLED(XY_OFFSETS_CALIBRATION)
+        case 429: G429(); break;
+      #endif
+
       #if ENABLED(DEBUG_GCODE_PARSER)
         case 800: parser.debug(); break;                          // G800: GCode Parser Test for G
       #endif

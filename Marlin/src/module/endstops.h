@@ -79,6 +79,10 @@ enum EndstopEnum : char {
     _ES_ITEM(HAS_BED_PROBE, Z_MIN_PROBE IF_DISABLED(USES_Z_MIN_PROBE_PIN, = Z_MIN))
   #endif
 
+  #if ENABLED(XY_OFFSETS_CALIBRATION)
+    _ES_ITEM(1, X_MIN_PROBE)
+  #endif
+
   // The total number of states
   NUM_ENDSTOP_STATES
 
@@ -134,7 +138,7 @@ class Endstops {
     #endif
 
   private:
-    static bool enabled, enabled_globally, enabled_xy_probe_target;
+    static bool enabled, enabled_globally;
     static endstop_mask_t live_state;
     static volatile endstop_mask_t hit_state; // Use X_MIN, Y_MIN, Z_MIN and Z_MIN_PROBE as BIT index
 
@@ -155,11 +159,10 @@ class Endstops {
      * Are endstops or the probe set to abort the move?
      */
     FORCE_INLINE static bool abort_enabled() {
-      return enabled || TERN0(HAS_BED_PROBE, z_probe_enabled);
+      return enabled || TERN0(HAS_BED_PROBE, z_probe_enabled) || TERN0(XY_OFFSETS_CALIBRATION, xypoc_enabled);
     }
 
     static bool global_enabled() { return enabled_globally; }
-    static bool xy_probe_target_enabled() { return enabled_xy_probe_target; }
 
     /**
      * Periodic call to poll endstops if required. Called from temperature ISR
@@ -219,7 +222,6 @@ class Endstops {
 
     // Enable / disable endstop checking
     static void enable(const bool onoff=true);
-    static void enable_xy_probe_target(const bool onoff=true);
 
     // Disable / Enable endstops based on ENSTOPS_ONLY_FOR_HOMING and global enable
     static void not_homing();
@@ -238,6 +240,11 @@ class Endstops {
     #if HAS_BED_PROBE
       static volatile bool z_probe_enabled;
       static void enable_z_probe(const bool onoff=true);
+    #endif
+
+    #if ENABLED(XY_OFFSETS_CALIBRATION)
+      static volatile bool xypoc_enabled;
+      static void enable_xypoc(const bool onoff=true);
     #endif
 
     static void resync();

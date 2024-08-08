@@ -38,8 +38,8 @@
 #define CONFIGURATION_H_VERSION 02010201
 #define MIXWARE_HYPER_X
 #define INVERT_X2_VS_X_DIR
-#define Y_MIN_PIN               PG12
 #define HEATER_CHAMBER_PIN      PB10
+#define X_MIN_PROBE_PIN         PG12
 
 //===========================================================================
 //============================= Getting Started =============================
@@ -1126,6 +1126,7 @@
 #define V_MAX_ENDSTOP_INVERTING true // Set to true to invert the logic of the endstop.
 #define W_MAX_ENDSTOP_INVERTING true // Set to true to invert the logic of the endstop.
 #define Z_MIN_PROBE_ENDSTOP_INVERTING true // Set to true to invert the logic of the probe.
+#define X_MIN_PROBE_ENDSTOP_INVERTING true // Set to true to invert the logic of the probe.
 
 // Enable this feature if all enabled endstop pins are interrupt-capable.
 // This will remove the need to poll the interrupt pins, saving many CPU cycles.

@@ -58,7 +58,7 @@ Endstops endstops;
 
 // private:
 
-bool Endstops::enabled, Endstops::enabled_globally, Endstops::enabled_xy_probe_target; // Initialized by settings.load()
+bool Endstops::enabled, Endstops::enabled_globally; // Initialized by settings.load()
 
 volatile Endstops::endstop_mask_t Endstops::hit_state;
 Endstops::endstop_mask_t Endstops::live_state = 0;
@@ -77,6 +77,10 @@ Endstops::endstop_mask_t Endstops::live_state = 0;
 
 #if HAS_BED_PROBE
   volatile bool Endstops::z_probe_enabled = false;
+#endif
+
+#if ENABLED(XY_OFFSETS_CALIBRATION)
+  volatile bool Endstops::xypoc_enabled = false;
 #endif
 
 // Initialized by settings.load()
@@ -409,6 +413,10 @@ void Endstops::init() {
     #endif
   #endif
 
+  #if ENABLED(XY_OFFSETS_CALIBRATION)
+    SET_INPUT_PULLUP(X_MIN_PROBE_PIN);
+  #endif
+
   #if ENABLED(PROBE_ACTIVATION_SWITCH)
     SET_INPUT(PROBE_ACTIVATION_SWITCH_PIN);
   #endif
@@ -419,7 +427,6 @@ void Endstops::init() {
 
   // Enable endstops
   enable_globally(ENABLED(ENDSTOPS_ALWAYS_ON_DEFAULT));
-  enabled_xy_probe_target = enabled;
 
 } // Endstops::init
 
@@ -445,10 +452,6 @@ void Endstops::enable(const bool onoff) {
   enabled = onoff;
   resync();
 }
-void Endstops::enable_xy_probe_target(const bool onoff) {
-  enabled_xy_probe_target = enabled_globally = enabled = onoff;
-  resync();
-}
 
 // Disable / Enable endstops based on ENSTOPS_ONLY_FOR_HOMING and global enable
 void Endstops::not_homing() {
@@ -470,6 +473,13 @@ void Endstops::not_homing() {
     #if PIN_EXISTS(PROBE_ENABLE)
       WRITE(PROBE_ENABLE_PIN, onoff);
     #endif
+    resync();
+  }
+#endif
+
+#if ENABLED(XY_OFFSETS_CALIBRATION)
+  void Endstops::enable_xypoc(const bool onoff) {
+    xypoc_enabled = onoff;
     resync();
   }
 #endif
@@ -754,8 +764,6 @@ void Endstops::update() {
    */
   #if HAS_X_MIN && !X_SPI_SENSORLESS
     UPDATE_ENDSTOP_BIT(X, MIN);
-    if (xy_probe_target_enabled())
-      SET_BIT_TO(live_state, _ENDSTOP(X, MIN), (READ_ENDSTOP(_ENDSTOP_PIN(Y, MIN)) != _ENDSTOP_INVERTING(Y, MIN)));
     #if ENABLED(X_DUAL_ENDSTOPS)
       #if HAS_X2_MIN
         UPDATE_ENDSTOP_BIT(X2, MIN);
@@ -777,7 +785,7 @@ void Endstops::update() {
   #endif
 
   #if HAS_Y_MIN && !Y_SPI_SENSORLESS
-    if (xy_probe_target_enabled()) UPDATE_ENDSTOP_BIT(Y, MIN);
+    UPDATE_ENDSTOP_BIT(Y, MIN);
     #if ENABLED(Y_DUAL_ENDSTOPS)
       #if HAS_Y2_MIN
         UPDATE_ENDSTOP_BIT(Y2, MIN);
@@ -827,6 +835,11 @@ void Endstops::update() {
     // When closing the gap check the enabled probe
     if (probe_switch_activated())
       UPDATE_ENDSTOP_BIT(Z, TERN(USES_Z_MIN_PROBE_PIN, MIN_PROBE, MIN));
+  #endif
+
+  #if ENABLED(XY_OFFSETS_CALIBRATION)
+    // When closing the gap check the enabled probe
+    UPDATE_ENDSTOP_BIT(X, MIN_PROBE);
   #endif
 
   #if HAS_Z_MAX && !Z_SPI_SENSORLESS
@@ -1129,8 +1142,8 @@ void Endstops::update() {
   if (stepper.axis_is_moving(X_AXIS)) {
     if (stepper.motor_direction(X_AXIS_HEAD)) { // -direction
       #if HAS_X_MIN || (X_SPI_SENSORLESS && X_HOME_TO_MIN)
-        PROCESS_ENDSTOP_X(MIN);
-        if (xy_probe_target_enabled()) PROCESS_ENDSTOP(X, MIN);
+        if ( TERN1(XY_OFFSETS_CALIBRATION, !xypoc_enabled) )
+          PROCESS_ENDSTOP_X(MIN);
         #if   CORE_DIAG(XY, Y, MIN)
           PROCESS_CORE_ENDSTOP(Y,MIN,X,MIN);
         #elif CORE_DIAG(XY, Y, MAX)
@@ -1140,6 +1153,10 @@ void Endstops::update() {
         #elif CORE_DIAG(XZ, Z, MAX)
           PROCESS_CORE_ENDSTOP(Z,MAX,X,MIN);
         #endif
+      #endif
+
+      #if ENABLED(XY_OFFSETS_CALIBRATION)
+        if (xypoc_enabled) PROCESS_ENDSTOP(X, MIN_PROBE);
       #endif
     }
     else { // +direction
@@ -1172,6 +1189,10 @@ void Endstops::update() {
           #elif CORE_DIAG(YZ, Z, MAX)
             PROCESS_CORE_ENDSTOP(Z,MAX,Y,MIN);
           #endif
+        #endif
+
+        #if ENABLED(XY_OFFSETS_CALIBRATION)
+          if (xypoc_enabled) PROCESS_ENDSTOP(X, MIN_PROBE);
         #endif
       }
       else { // +direction
